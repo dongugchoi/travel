@@ -37,6 +37,27 @@ npm run dev
 | `npm run build` | 프로덕션 빌드 |
 | `npm run start` | 빌드 결과 실행 |
 | `npm run generate` | 정적 사이트 생성 (`dist/`) |
+| `npm run build:pages` | GitHub Pages 용 정적 사이트 생성 (주소 앞에 `/travel/`) |
+
+## 배포 (GitHub Pages)
+
+사이트 주소: **https://dongugchoi.github.io/travel/** (로그인한 편집자만 일정이 보임)
+
+- `main` 브랜치: 소스 코드
+- `gh-pages` 브랜치: 빌드 결과(`dist/`). GitHub Pages 가 이 브랜치를 그대로 보여줍니다.
+
+수정한 뒤 다시 배포하는 법:
+
+```bash
+npm run build:pages
+```
+
+```bash
+cd dist && git add -A && git commit -m "Deploy" && git push origin gh-pages && cd ..
+```
+
+> `dist/` 안에는 gh-pages 용 git 이 따로 있습니다. 처음부터 다시 만들려면: `cd dist && git init -b gh-pages && git remote add origin https://github.com/dongugchoi/travel.git` 후 위 명령.
+> 빌드에는 `.env` 의 키가 들어갑니다 (브라우저용 키라 원래 공개되는 값이고, 사이트 주소·API 제한과 하루 상한으로 보호됨).
 
 ## 프로젝트 구조
 
@@ -238,18 +259,18 @@ FIREBASE_APP_ID=appId 값 (1:…:web:…)
 - [x] 장소 검색 자동완성 · 지도에서 장소 추가 · 현재 위치에서 길찾기
 - [x] 구글 로그인 (편집자만 수정)
 - [x] 여자친구 계정을 편집자로 추가
-- [ ] 배포 — 아래 **배포 전 체크리스트** 먼저 할 것
+- [x] 배포 (GitHub Pages)
 
 ### 배포 전 체크리스트 (보안)
 
-- [ ] **보기도 로그인한 편집자만** 되게 바꾸기
+- [x] **보기도 로그인한 편집자만** 되게 바꾸기
   - `firestore.rules`: `allow read: if tripId == 'japan-2026';` → `allow read: if tripId == 'japan-2026' && isEditor();` 로 바꾸고 Firebase 콘솔에 게시
   - 사이트: 로그인 안 했으면 일정 대신 "로그인해 주세요" 화면 보여주기
 - [x] 여자친구 계정을 `editors()` 에 추가 (완료)
 - [ ] Firebase 자동 생성 키(`Browser key (auto created by Firebase)`)에 웹사이트 제한 걸기 — 배포 도메인, `japan-514311.firebaseapp.com`, `localhost:3000`
-- [ ] 지도 키(`travel-planner-maps`) 웹사이트 제한에 배포 도메인 추가
-- [ ] Firebase Authentication → 설정 → 승인된 도메인에 배포 도메인 추가
-- [ ] `npm run generate` 로 정적 사이트를 만들어 올리기 (Nuxt 2 는 지원 종료라 서버 없이 올리는 게 안전)
+- [x] 지도 키(`travel-planner-maps`) 웹사이트 제한에 배포 도메인 추가
+- [x] Firebase Authentication → 설정 → 승인된 도메인에 배포 도메인 추가
+- [x] 정적 사이트로 만들어 올리기 (`npm run build:pages`, Nuxt 2 는 지원 종료라 서버 없이 올리는 게 안전)
 - [ ] 구글 계정 2단계 인증 켜기
 - [ ] 날짜별 예산 / 경비 정리
 - [ ] 준비물 체크리스트
