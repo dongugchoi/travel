@@ -1,0 +1,13 @@
+node_modules
+.nuxt
+dist
+.output
+.env
+*.log
+.DS_Store
+
+# 실제 이메일이 들어 있음 (공개용은 firestore.rules.example)
+firestore.rules
+
+# Claude 미리보기 설정
+.claude/

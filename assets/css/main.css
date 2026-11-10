@@ -1,0 +1,36 @@
+* { box-sizing: border-box; }
+
+/* 여행 매거진 테마 */
+:root {
+  --bg: #f5f0e6;
+  --surface: #fbf8f2;
+  --ink: #2b2622;
+  --muted: #9a8a76;
+  --line: #d8ccb8;
+  --accent: #c0583a;
+  --font: 'Noto Serif KR', Georgia, serif;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+}
+
+a { color: inherit; text-decoration: none; }
+
+button, input, select { font: inherit; color: inherit; }
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: var(--muted);
+}
