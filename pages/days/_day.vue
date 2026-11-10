@@ -1,5 +1,9 @@
 <template>
-  <section v-if="dayData">
+  <section v-if="!dayData" class="missing">
+    <p>{{ $t('없는 날짜예요') }}</p>
+    <NuxtLink to="/" class="back">{{ $t('← 전체 일정') }}</NuxtLink>
+  </section>
+  <section v-else>
     <NuxtLink to="/" class="back">{{ $t('← 전체 일정') }}</NuxtLink>
 
     <header class="day-hero">
@@ -99,9 +103,6 @@ import routeDialog from '~/mixins/routeDialog'
 export default {
   name: 'DayPage',
   mixins: [routeDialog],
-  validate ({ params, store }) {
-    return !!store.getters.getDay(params.day)
-  },
   data () {
     return { dialogInitial: null, authReady: false, pendingRemove: null, memoIndex: null, pendingMemoDelete: null }
   },
@@ -195,6 +196,7 @@ export default {
 
 <style scoped>
 .back { color: var(--muted); font-size: 14px; }
+.missing { padding: 60px 0; text-align: center; color: var(--muted); }
 .back:hover { color: var(--accent); }
 
 .day-hero {

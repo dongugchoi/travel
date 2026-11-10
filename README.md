@@ -46,17 +46,12 @@ npm run dev
 - `main` 브랜치: 소스 코드
 - `gh-pages` 브랜치: 빌드 결과(`dist/`). GitHub Pages 가 이 브랜치를 그대로 보여줍니다.
 
-수정한 뒤 다시 배포하는 법:
+수정한 뒤 다시 배포하는 법 (빌드 + gh-pages 에 올리기까지 한 번에):
 
 ```bash
-npm run build:pages
+npm run deploy
 ```
 
-```bash
-cd dist && git add -A && git commit -m "Deploy" && git push origin gh-pages && cd ..
-```
-
-> `dist/` 안에는 gh-pages 용 git 이 따로 있습니다. 처음부터 다시 만들려면: `cd dist && git init -b gh-pages && git remote add origin https://github.com/dongugchoi/travel.git` 후 위 명령.
 > 빌드에는 `.env` 의 키가 들어갑니다 (브라우저용 키라 원래 공개되는 값이고, 사이트 주소·API 제한과 하루 상한으로 보호됨).
 
 ## 프로젝트 구조

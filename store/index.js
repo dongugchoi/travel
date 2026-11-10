@@ -28,7 +28,9 @@ export const state = () => ({
   // 오늘 번역 API 상한에 걸렸는지
   translateBlocked: false,
   // 로그인 상태 확인이 끝났는지 (끝나기 전엔 로딩 화면)
-  authChecked: false
+  authChecked: false,
+  // DB 에서 실제 일정을 다 불러왔는지 (그 전엔 견본 데이터라 화면에 안 보여줌)
+  tripLoaded: false
 })
 
 export const getters = {
@@ -92,6 +94,9 @@ export const mutations = {
   },
   SET_ROUTES_BLOCKED (state, value) {
     state.routesBlocked = value
+  },
+  SET_TRIP_LOADED (state, value) {
+    state.tripLoaded = value
   },
   SET_AUTH_CHECKED (state, value) {
     state.authChecked = value
@@ -159,6 +164,7 @@ export const actions = {
         await this.$tripDb.save(state.trip)
       }
       commit('SET_SYNC', 'saved')
+      commit('SET_TRIP_LOADED', true)
       dispatch('ensureTranslations')
     } catch (e) {
       console.error('[firestore] 불러오기 실패', e)

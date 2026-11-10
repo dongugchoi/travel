@@ -1,8 +1,13 @@
 <template>
   <section class="gate">
-    <template v-if="!authChecked">
+    <template v-if="!authChecked || (canEdit && !tripLoaded && sync !== 'error')">
       <span class="spinner" aria-hidden="true" />
       <p class="muted">{{ $t('불러오는 중…') }}</p>
+    </template>
+
+    <template v-else-if="canEdit && sync === 'error'">
+      <h1>Travel Journal</h1>
+      <p class="muted">{{ $t('일정을 불러오지 못했어요. 새로고침해 주세요.') }}</p>
     </template>
 
     <template v-else-if="!user">
@@ -30,7 +35,7 @@ export default {
     return { error: '' }
   },
   computed: {
-    ...mapState(['authChecked', 'user'])
+    ...mapState(['authChecked', 'user', 'canEdit', 'tripLoaded', 'sync'])
   },
   methods: {
     async signIn () {
