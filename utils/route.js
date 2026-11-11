@@ -1,9 +1,8 @@
 // 일정 → 구간(legs) 만들기, Routes API 로 이동 시간·거리 계산, 표시용 포맷
 import { t } from '~/plugins/i18n'
 
-// 이동 수단: 대중교통 + 도보 (자동차는 안 씀)
+// 이동 수단: 도보만 (대중교통·자동차는 안 씀)
 export const MODES = [
-  { value: 'transit', label: '대중교통', api: 'TRANSIT' },
   { value: 'walking', label: '도보', api: 'WALK' }
 ]
 

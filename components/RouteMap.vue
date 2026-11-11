@@ -18,8 +18,7 @@
           </small>
         </div>
         <div class="leg-actions">
-          <button type="button" class="btn btn-chip leg-btn" @click="openMap(i, 'transit')">{{ $t('대중교통') }}</button>
-          <button type="button" class="btn btn-chip leg-btn" @click="openMap(i, 'walking')">{{ $t('도보') }}</button>
+          <button type="button" class="btn btn-chip leg-btn" @click="openMap(i, 'walking')">{{ $t('지도') }}</button>
         </div>
       </li>
     </ol>
@@ -32,8 +31,7 @@
           <small>{{ s.time }} · {{ $t('지금 있는 곳에서 출발') }}</small>
         </div>
         <div class="leg-actions">
-          <button type="button" class="btn btn-chip leg-btn" @click="openFromHere(s, 'transit')">{{ $t('대중교통') }}</button>
-          <button type="button" class="btn btn-chip leg-btn" @click="openFromHere(s, 'walking')">{{ $t('도보') }}</button>
+          <button type="button" class="btn btn-chip leg-btn" @click="openFromHere(s, 'walking')">{{ $t('지도') }}</button>
         </div>
       </li>
     </ol>

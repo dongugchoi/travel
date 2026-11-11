@@ -16,19 +16,6 @@
           <button type="button" class="x" :aria-label="$t('닫기')" @click="close">×</button>
         </header>
 
-        <!-- 이동 수단 -->
-        <div v-if="!allDay" class="modes" role="group" :aria-label="$t('이동 수단')">
-          <button
-            v-for="m in modes"
-            :key="m.value"
-            type="button"
-            :class="{ active: mode === m.value }"
-            @click="setMode(m.value)"
-          >
-            {{ $t(m.label) }}
-          </button>
-        </div>
-
         <!-- 구간 고르기 (현재 위치 모드가 아닐 때) -->
         <div v-if="!fromHere && !allDay && legs.length > 1" class="leg-chips">
           <button
@@ -45,7 +32,7 @@
         <div class="map-wrap">
           <!-- JavaScript 지도 (도보) -->
           <div v-show="!useEmbed" ref="map" class="map" />
-          <!-- 무료 지도 (대중교통, 또는 문제가 생겼을 때) -->
+          <!-- 무료 지도 (내 지도를 못 불러올 때만) -->
           <iframe
             v-if="useEmbed && embedUrl"
             :key="embedUrl"
@@ -97,12 +84,10 @@
               <template v-else-if="remain">{{ $t('남은 거리 {dist} · 약 {time}', remainText) }}</template>
               <template v-else>{{ $t('위치 확인 중…') }}</template>
             </template>
-            <template v-else-if="mode === 'transit' && !allDay">{{ $t('대중교통 경로는 지도에서 확인하세요 (일본은 시간 계산이 지원되지 않아요)') }}</template>
             <template v-else-if="infoText">{{ infoText }}</template>
           </p>
           <p v-if="canEdit && !useEmbed && !picked" class="hint">{{ $t('지도의 장소를 누르면 일정에 추가할 수 있어요') }}</p>
           <div class="links">
-            <button v-if="!useEmbed && mode !== 'transit'" type="button" class="link" @click="forceEmbed">{{ $t('간단 지도로 보기') }}</button>
             <a v-if="appLink" :href="appLink" target="_blank" rel="noopener" class="link">{{ $t('구글 지도 앱에서 열기') }}</a>
           </div>
         </footer>
@@ -334,8 +319,7 @@ export default {
       this.loading = true
       this.loadingText = '지도 불러오는 중…'
 
-      // 대중교통은 구글 API 가 일본 경로를 주지 않아 무료 지도(Embed)로 보여줌
-      if (this.mode === 'transit' || this.embedForced) {
+      if (this.embedForced) {
         this.useEmbed = true
         return
       }
@@ -351,14 +335,39 @@ export default {
         await this.draw(info)
       } catch (e) {
         console.warn('[map]', e)
-        this.error = e.status === 429
-          ? '오늘 경로 계산 한도(320번)에 도달해서 간단 지도로 보여드려요'
-          : '경로를 불러오지 못해 간단 지도로 보여드려요'
-        this.embedForced = true
-        this.useEmbed = true
-        return
+        // 경로 계산이 안 돼도 두 손가락 안내가 뜨는 간단 지도로 바꾸지 않고, 내 지도에 핀만
+        const limit = e.status === 429
+        try {
+          await this.ensureMap()
+          this.clearOverlays()
+          this.setRoute(null)
+          this.showPoints(await this.endPoints())
+          this.error = limit ? '오늘 경로 계산 한도(320번)에 도달해서 위치만 보여드려요' : '경로를 불러오지 못해 위치만 보여드려요'
+        } catch (e2) {
+          this.error = limit
+            ? '오늘 경로 계산 한도(320번)에 도달해서 간단 지도로 보여드려요'
+            : '경로를 불러오지 못해 간단 지도로 보여드려요'
+          this.embedForced = true
+          this.useEmbed = true
+          return
+        }
       }
       this.loading = false
+    },
+
+    // 출발(또는 내 위치)·도착 핀 목록
+    async endPoints () {
+      const pts = []
+      if (this.fromHere && this.here) pts.push({ pos: { lat: this.here.lat, lng: this.here.lng }, me: true })
+      else if (this.from) {
+        const p = await this.coordsOf(this.from)
+        if (p) pts.push({ pos: p, label: 'A' })
+      }
+      if (this.to) {
+        const p = await this.coordsOf(this.to)
+        if (p) pts.push({ pos: p, label: pts.length ? 'B' : null })
+      }
+      return pts
     },
 
     // 하루 전체 동선: 구간마다 도보 경로(저장된 값 우선)를 이어서 한 지도에
@@ -385,12 +394,28 @@ export default {
         await this.drawAll(infos)
       } catch (e) {
         console.warn('[map]', e)
-        this.error = e.status === 429
-          ? '오늘 경로 계산 한도(320번)에 도달해서 간단 지도로 보여드려요'
-          : '경로를 불러오지 못해 간단 지도로 보여드려요'
-        this.embedForced = true
-        this.useEmbed = true
-        return
+        const limit = e.status === 429
+        try {
+          // 두 손가락 안내가 뜨는 간단 지도 대신, 내 지도에 장소 번호 핀만
+          await this.ensureMap()
+          this.clearOverlays()
+          this.setRoute(null)
+          const pts = []
+          for (let i = 0; i < this.allStops.length; i++) {
+            const p = await this.coordsOf(this.allStops[i])
+            if (p) pts.push({ pos: p, label: String(i + 1) })
+          }
+          if (!pts.length) throw new Error('no coords')
+          this.showPoints(pts)
+          this.error = limit ? '오늘 경로 계산 한도(320번)에 도달해서 위치만 보여드려요' : '경로를 불러오지 못해 위치만 보여드려요'
+        } catch (e2) {
+          this.error = limit
+            ? '오늘 경로 계산 한도(320번)에 도달해서 간단 지도로 보여드려요'
+            : '경로를 불러오지 못해 간단 지도로 보여드려요'
+          this.embedForced = true
+          this.useEmbed = true
+          return
+        }
       }
       this.loading = false
     },
@@ -423,8 +448,40 @@ export default {
       })
       this.overlays = overlays
       this.setRoute(fullPath.length > 1 ? { path: fullPath, duration, lines } : null)
-      if (!bounds.isEmpty()) this.map.fitBounds(bounds, 40)
-      else this.error = '이 이동 수단으로는 경로를 찾지 못했어요'
+      if (!bounds.isEmpty()) {
+        this.map.fitBounds(bounds, 40)
+        return
+      }
+      // 경로가 하나도 없으면(예: 한국) 장소들만 번호 핀으로
+      const pts = []
+      for (let i = 0; i < this.allStops.length; i++) {
+        const p = await this.coordsOf(this.allStops[i])
+        if (p) pts.push({ pos: p, label: String(i + 1) })
+      }
+      this.showPoints(pts)
+      this.error = pts.length
+        ? '이곳은 도보 경로를 계산할 수 없어 위치만 보여드려요'
+        : '이 이동 수단으로는 경로를 찾지 못했어요'
+    },
+
+    // 핀(과 내 위치 파란 점)만 찍고 다 보이게 맞춤
+    showPoints (pts) {
+      const g = window.google.maps
+      if (!pts.length || !this.map) return
+      const bounds = new g.LatLngBounds()
+      pts.forEach(({ pos, label, me }) => {
+        const marker = me
+          ? new g.Marker({ position: pos, map: this.map, icon: { path: g.SymbolPath.CIRCLE, scale: 8, fillColor: '#4285f4', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 3 } })
+          : new g.Marker({ position: pos, map: this.map, label: label ? { text: label, color: '#fff' } : null })
+        this.overlays.push(marker)
+        bounds.extend(pos)
+      })
+      if (pts.length === 1) {
+        this.map.setCenter(pts[0].pos)
+        this.map.setZoom(16)
+      } else {
+        this.map.fitBounds(bounds, 60)
+      }
     },
 
     // 일정 장소의 좌표: 장소 검색으로 고른 좌표 → 없으면 저장된 도보 경로의 끝점에서 찾음 (추가 요금 없음)
@@ -492,7 +549,12 @@ export default {
       this.clearOverlays()
       this.setRoute(null)
       if (!info || info.none || !info.polyline) {
-        this.error = '이 이동 수단으로는 경로를 찾지 못했어요'
+        // 경로가 없을 때(예: 한국은 구글이 도보 길찾기를 안 줌) → 도쿄 기본 화면 대신 내 위치·목적지를 보여줌
+        const pts = await this.endPoints()
+        this.showPoints(pts)
+        this.error = pts.length
+          ? '이곳은 도보 경로를 계산할 수 없어 위치만 보여드려요'
+          : '이 이동 수단으로는 경로를 찾지 못했어요'
         return
       }
       const { encoding } = await importMapsLibrary(this.apiKey, 'geometry')
