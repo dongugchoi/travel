@@ -48,6 +48,17 @@ function nextDate (date) {
   return `${d.getFullYear()}-${mm}-${dd}`
 }
 
+// 날짜순으로 정렬하고 Day 번호(1, 2, 3…)와 여행 시작일·마지막 날을 다시 맞춤
+function normalizeDays (trip) {
+  const days = trip.days
+  days.sort((a, b) => a.date.localeCompare(b.date))
+  days.forEach((d, i) => { d.day = i + 1 })
+  if (days.length) {
+    trip.startDate = days[0].date
+    trip.endDate = days[days.length - 1].date
+  }
+}
+
 export const mutations = {
   SET_TRIP (state, trip) {
     state.trip = trip
@@ -55,33 +66,36 @@ export const mutations = {
   // 마지막 날 다음 날짜로 하루 추가 + 여행 마지막 날짜도 같이 바꿈
   ADD_DAY (state) {
     const days = state.trip.days
+    normalizeDays(state.trip)
     const last = days[days.length - 1]
     const date = last ? nextDate(last.date) : state.trip.startDate
     days.push({
-      day: last ? last.day + 1 : 1,
+      day: days.length + 1,
       date,
       region: last ? last.region : '',
       title: '자유 일정',
       schedules: []
     })
-    state.trip.endDate = date
+    normalizeDays(state.trip)
   },
-  // 하루 삭제 (최소 하루는 남김). 날짜가 끊기지 않게:
-  // - 첫날 삭제: 여행 시작일이 하루 늦어지고 나머지 날짜는 그대로
-  // - 중간/마지막 삭제: 뒤의 날들이 하루씩 앞당겨짐
-  // 그 뒤 Day 번호를 1부터 다시 매기고 시작일·마지막 날을 맞춤
+  // 하루 삭제 (최소 하루는 남김). 그 날만 지우고 다른 날짜는 그대로 둠
+  // (Day 번호만 1부터 다시 매기고, 시작일·마지막 날을 맞춤)
   REMOVE_DAY (state, dayNumber) {
     const days = state.trip.days
     if (days.length <= 1) return
     const index = days.findIndex(d => d.day === dayNumber)
     if (index < 0) return
-    if (index > 0) {
-      for (let i = days.length - 1; i > index; i--) days[i].date = days[i - 1].date
-    }
     days.splice(index, 1)
-    days.forEach((d, i) => { d.day = i + 1 })
-    state.trip.startDate = days[0].date
-    state.trip.endDate = days[days.length - 1].date
+    normalizeDays(state.trip)
+  },
+  // 날짜 정보 고치기: 제목·날짜·도시. 날짜가 바뀌면 순서와 Day 번호를 다시 맞춤
+  UPDATE_DAY (state, { day, title, date, region }) {
+    const target = state.trip.days.find(d => d.day === day)
+    if (!target) return
+    target.title = (title || '').trim()
+    target.region = (region || '').trim()
+    if (date) target.date = date
+    normalizeDays(state.trip)
   },
   SET_SYNC (state, status) {
     state.sync = status
@@ -131,6 +145,16 @@ export const mutations = {
     // 메모를 쓴 사람 (지우면 같이 지움)
     if (s.memo && by) s.memoBy = by
     if (!s.memo) delete s.memoBy
+  },
+  // 일정 고치기 (시간·할 일·장소). 메모·작성자는 그대로 두고, 시간순 다시 정렬
+  UPDATE_SCHEDULE (state, { day, index, schedule }) {
+    const target = state.trip.days.find(d => d.day === day)
+    const s = target && target.schedules[index]
+    if (!s) return
+    Object.assign(s, schedule)
+    // 장소를 바꿨는데 지도 위치가 없으면 예전 위치를 지움
+    if (!schedule.placeId) { delete s.placeId; delete s.lat; delete s.lng }
+    target.schedules.sort((a, b) => a.time.localeCompare(b.time))
   },
   REMOVE_SCHEDULE (state, { day, index }) {
     const target = state.trip.days.find(d => d.day === day)
@@ -240,6 +264,25 @@ export const actions = {
   async setMemo ({ state, commit, dispatch }, payload) {
     if (!state.canEdit) return
     commit('SET_MEMO', { ...payload, by: authorName(state) })
+    await dispatch('saveTrip')
+    dispatch('ensureTranslations')
+  },
+
+  // 날짜 정보 고치기. 바뀐 뒤의 Day 번호를 돌려줌 (날짜가 바뀌면 번호가 달라질 수 있음)
+  async updateDay ({ state, commit, dispatch }, payload) {
+    if (!state.canEdit) return payload.day
+    const target = state.trip.days.find(d => d.day === payload.day)
+    commit('UPDATE_DAY', payload)
+    await dispatch('saveTrip')
+    dispatch('ensureTranslations')
+    return target ? target.day : payload.day
+  },
+
+  async updateSchedule ({ state, commit, dispatch }, { day, index, schedule }) {
+    if (!state.canEdit) return
+    const { jaName, ...rest } = schedule
+    if (jaName && rest.address) commit('MERGE_TR', { [rest.address.trim()]: jaName })
+    commit('UPDATE_SCHEDULE', { day, index, schedule: rest })
     await dispatch('saveTrip')
     dispatch('ensureTranslations')
   },

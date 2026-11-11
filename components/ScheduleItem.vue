@@ -40,7 +40,10 @@
         </button>
       </div>
     </div>
-    <button v-if="editable" class="remove" :aria-label="$t('일정 삭제')" @click="$emit('remove')">{{ $t('삭제') }}</button>
+    <div v-if="editable" class="item-actions">
+      <button type="button" class="remove" @click="$emit('edit')">{{ $t('수정') }}</button>
+      <button type="button" class="remove" :aria-label="$t('일정 삭제')" @click="$emit('remove')">{{ $t('삭제') }}</button>
+    </div>
   </li>
 </template>
 
@@ -105,8 +108,8 @@ export default {
   cursor: pointer;
 }
 .link:hover { border-bottom-color: var(--accent); color: var(--accent); }
+.item-actions { align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 .remove {
-  align-self: center;
   border: none;
   background: none;
   color: var(--muted);

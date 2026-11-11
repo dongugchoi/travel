@@ -9,7 +9,10 @@
     <header class="day-hero">
       <span class="num">{{ dayData.day | pad2 }}</span>
       <div class="hero-text">
-        <p class="eyebrow">DAY {{ dayData.day | pad2 }}</p>
+        <div class="eyebrow-row">
+          <p class="eyebrow">DAY {{ dayData.day | pad2 }}</p>
+          <button v-if="canEdit" type="button" class="edit-day" @click="openRouteDialog('day')">{{ $t('날짜 수정') }}</button>
+        </div>
         <h1>{{ $tx(dayData.title) }}</h1>
         <div class="date-row">
           <p class="date">
@@ -36,6 +39,7 @@
         :schedule="item"
         :editable="canEdit"
         @remove="pendingRemove = index"
+        @edit="openEdit(index)"
         @navigate="$refs.route.openFromHere(item)"
         @memo-edit="openMemo(index)"
         @memo-delete="pendingMemoDelete = index"
@@ -58,12 +62,22 @@
     </nav>
 
     <ScheduleDialog
-      :open="addOpen"
+      :open="addOpen || editOpen"
+      :editing="editOpen"
       :subtitle="`Day ${dayData.day} · ${$tx(dayData.title)}`"
-      :initial="dialogInitial"
+      :initial="editOpen ? editInitial : dialogInitial"
       :region="dayData.region || ''"
       @close="closeRouteDialog"
-      @submit="add"
+      @submit="onScheduleSubmit"
+    />
+
+    <!-- 날짜 수정: 제목·날짜·도시 -->
+    <DayDialog
+      :open="dayOpen"
+      :day="dayData"
+      :taken-dates="takenDates"
+      @close="closeRouteDialog"
+      @save="saveDay"
     />
 
     <!-- 시간마다 메모: 쓰기/고치기 -->
@@ -104,13 +118,30 @@ export default {
   name: 'DayPage',
   mixins: [routeDialog],
   data () {
-    return { dialogInitial: null, authReady: false, pendingRemove: null, memoIndex: null, pendingMemoDelete: null }
+    return { dialogInitial: null, authReady: false, pendingRemove: null, memoIndex: null, pendingMemoDelete: null, editIndex: null }
   },
   computed: {
     ...mapState(['canEdit', 'user']),
     // 주소가 ?dialog=add 일 때 열림 → 뒤로 가기 스와이프로 닫힘
     addOpen () {
       return this.routeDialog === 'add' && this.canEdit
+    },
+    // ?dialog=edit: 일정 수정
+    editOpen () {
+      return this.routeDialog === 'edit' && this.canEdit && this.editIndex !== null && !!this.dayData.schedules[this.editIndex]
+    },
+    editInitial () {
+      const s = this.editIndex !== null && this.dayData.schedules[this.editIndex]
+      if (!s) return null
+      return { time: s.time, place: s.place, address: s.address || '', placeId: s.placeId || null, lat: s.lat != null ? s.lat : null, lng: s.lng != null ? s.lng : null }
+    },
+    // ?dialog=day: 날짜 수정
+    dayOpen () {
+      return this.routeDialog === 'day' && this.canEdit
+    },
+    // 다른 날에 쓰인 날짜 (같은 날짜 두 번 못 쓰게)
+    takenDates () {
+      return this.$store.getters.days.filter(d => d.day !== this.dayNumber).map(d => d.date)
     },
     // 주소가 ?dialog=memo 일 때 열림 → 뒤로 가기 스와이프로 닫힘
     memoOpen () {
@@ -167,6 +198,28 @@ export default {
       this.$store.dispatch('addSchedule', { day: this.dayNumber, schedule })
       this.closeRouteDialog()
     },
+    openEdit (index) {
+      this.editIndex = index
+      this.openRouteDialog('edit')
+    },
+    // 추가 창/수정 창 공통 "추가·저장"
+    onScheduleSubmit (schedule) {
+      if (this.editOpen) {
+        const { memo, ...rest } = schedule // 메모는 메모칸에서 따로 관리
+        this.$store.dispatch('updateSchedule', { day: this.dayNumber, index: this.editIndex, schedule: rest })
+        this.closeRouteDialog()
+      } else {
+        this.add(schedule)
+      }
+    },
+    async saveDay (form) {
+      const newDay = await this.$store.dispatch('updateDay', { day: this.dayNumber, ...form })
+      this.closeRouteDialog()
+      // 날짜를 바꿔 순서(Day 번호)가 달라졌으면 그 번호의 페이지로
+      if (newDay && newDay !== this.dayNumber) {
+        setTimeout(() => this.$router.replace(`/days/${newDay}`), 300)
+      }
+    },
     openMemo (index) {
       this.memoIndex = index
       this.openRouteDialog('memo')
@@ -196,6 +249,17 @@ export default {
 
 <style scoped>
 .back { color: var(--muted); font-size: 14px; }
+.eyebrow-row { display: flex; align-items: baseline; gap: 12px; }
+.edit-day {
+  border: none;
+  border-bottom: 1px solid var(--muted);
+  background: none;
+  padding: 0 0 1px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.edit-day:hover { color: var(--accent); border-bottom-color: var(--accent); }
 .missing { padding: 60px 0; text-align: center; color: var(--muted); }
 .back:hover { color: var(--accent); }
 

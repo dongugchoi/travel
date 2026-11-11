@@ -52,8 +52,10 @@ export default {
 </script>
 
 <style scoped>
+/* 화면 세로 가운데: 전체 높이에서 헤더(약 57px)와 본문 위아래 여백(32+64px)을 뺀 만큼 */
 .gate {
-  min-height: 60vh;
+  min-height: calc(100vh - 160px);
+  min-height: calc(100dvh - 160px); /* 아이폰 주소창 높이까지 반영 */
   display: flex;
   flex-direction: column;
   align-items: center;

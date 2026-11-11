@@ -9,7 +9,7 @@
       >
         <header class="head">
           <div>
-            <p class="eyebrow">ADD SCHEDULE</p>
+            <p class="eyebrow">{{ editing ? 'EDIT SCHEDULE' : 'ADD SCHEDULE' }}</p>
             <h2 id="schedule-dialog-title">{{ subtitle }}</h2>
           </div>
           <button type="button" class="x" :aria-label="$t('닫기')" @click="close">×</button>
@@ -62,7 +62,7 @@
 
           <footer class="actions">
             <button type="button" class="ghost" @click="close">{{ $t('취소') }}</button>
-            <button type="submit" class="primary">{{ $t('추가') }}</button>
+            <button type="submit" class="primary">{{ editing ? $t('저장') : $t('추가') }}</button>
           </footer>
         </form>
       </div>
@@ -85,7 +85,9 @@ export default {
     subtitle: { type: String, default: '' },
     // 지도에서 고른 장소 등 미리 채울 값
     initial: { type: Object, default: null },
-    region: { type: String, default: '' }
+    region: { type: String, default: '' },
+    // true 면 "일정 수정" 창 (버튼이 "저장")
+    editing: { type: Boolean, default: false }
   },
   data () {
     return {

@@ -31,7 +31,7 @@
 
 <script>
 import { mapState, mapGetters } from 'vuex'
-import { koDateLong, shortDate } from '~/plugins/filters'
+import { koDateLong } from '~/plugins/filters'
 import { t } from '~/plugins/i18n'
 
 export default {
@@ -63,11 +63,8 @@ export default {
       } else if (index === last) {
         parts.push(t('여행 마지막 날이 {date}로 바뀌어요.', { date: koDateLong(this.days[last - 1].date) }))
       } else {
-        const after = this.days.slice(index + 1)
-        const range = after.length > 1
-          ? `${shortDate(after[0].date)}~${shortDate(after[after.length - 1].date)}`
-          : shortDate(after[0].date)
-        parts.push(t('{range} 일정이 하루씩 앞당겨지고, 여행 마지막 날이 {date}로 바뀌어요.', { range, date: koDateLong(this.days[last - 1].date) }))
+        // 중간 날짜: 그 날만 지워지고 다른 날짜는 그대로
+        parts.push(t('다른 날짜는 그대로예요.'))
       }
       return parts.join(' ')
     }
