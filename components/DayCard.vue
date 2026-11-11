@@ -4,8 +4,9 @@
       <div class="mag-num">{{ day.day | pad2 }}</div>
       <div class="mag-body">
         <h3 class="mag-title">{{ $tx(day.title) }}</h3>
-        <p class="mag-date">
-          {{ day.date | koDateLong }}<template v-if="day.region"> · {{ $tx(day.region) }}</template>
+        <p class="mag-date date-line">
+          <span class="date-text">{{ day.date | koDateLong }}</span>
+          <span v-if="day.region" class="city-tag">{{ $tx(day.region) }}</span>
         </p>
         <ul class="mag-preview">
           <li v-for="(s, i) in day.schedules.slice(0, 3)" :key="i">

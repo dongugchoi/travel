@@ -15,8 +15,9 @@
         </div>
         <h1>{{ $tx(dayData.title) }}</h1>
         <div class="date-row">
-          <p class="date">
-            {{ dayData.date | koDateLong }}<template v-if="dayData.region"> · {{ $tx(dayData.region) }}</template>
+          <p class="date date-line">
+            <span class="date-text">{{ dayData.date | koDateLong }}</span>
+            <span v-if="dayData.region" class="city-tag">{{ $tx(dayData.region) }}</span>
           </p>
           <button v-if="canEdit" type="button" class="add-btn" @click="openAdd()">{{ $t('+ 일정 추가') }}</button>
           <!-- 로그인 안 했으면 버튼이 그냥 사라지지 않고 로그인 안내 -->
