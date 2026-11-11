@@ -22,7 +22,6 @@
           <label>
             <span>{{ $t('도시') }}</span>
             <input v-model="form.region">
-            <small>{{ $t('지도에서 장소를 찾을 때 앞에 붙여요') }}</small>
           </label>
           <footer class="actions">
             <button type="button" class="btn btn-glass" @click="$emit('close')">{{ $t('취소') }}</button>

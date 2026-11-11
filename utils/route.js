@@ -9,13 +9,11 @@ export const MODES = [
 
 export const modeInfo = value => MODES.find(m => m.value === value) || MODES[0]
 
-// 지도 검색어: address(장소 이름) → 없으면 place. 그날 도시 이름을 앞에 붙여 다른 지역 같은 이름을 피함
+// 지도 검색어: address(장소 이름) → 없으면 place. 입력한 그대로 씀 (도시 이름을 앞에 붙이지 않음)
+// region 인자는 예전 호출 모양을 유지하려고 남겨 둠 (쓰지 않음)
+// eslint-disable-next-line no-unused-vars
 export function placeQuery (s, region) {
-  const text = (s.address || s.place || '').trim()
-  if (!text) return ''
-  // 장소 검색 목록에서 고른 장소(좌표·ID 있음)는 그대로. 직접 친 이름만 도시를 붙여 찾음
-  if (s.placeId || (s.lat != null && s.lng != null)) return text
-  return region && !text.includes(region) ? `${region} ${text}` : text
+  return (s.address || s.place || '').trim()
 }
 
 // 같은 장소인지 비교할 때 쓰는 값 (자동완성으로 고른 장소는 placeId 가 있음)
