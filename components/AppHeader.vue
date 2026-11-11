@@ -1,11 +1,10 @@
 <template>
   <header class="app-header">
     <div class="inner">
-      <NuxtLink to="/" class="logo">Travel Journal</NuxtLink>
+      <!-- 저장 상태는 글자 대신 제목 색으로: 저장 중 회색 → 저장됨 초록 / 실패 빨강 -->
+      <NuxtLink to="/" class="logo" :class="logoState" :title="label ? $t(label) : null">Travel Journal</NuxtLink>
 
       <div class="right">
-        <span v-if="label" class="sync" :class="sync">{{ $t(label) }}</span>
-
         <!-- 언어 버튼 하나: 지금 언어가 보이고, 누르면 다른 언어로 바뀜 -->
         <button
           type="button"
@@ -60,6 +59,9 @@ export default {
     otherLang () {
       return this.langs.find(l => l.value !== this.$lang) || this.langs[0]
     },
+    logoState () {
+      return this.label ? 'is-' + this.sync : ''
+    },
     label () {
       // 로그인 안 했으면 "저장됨" 대신 아무것도 안 보여줌
       if (!this.canEdit && (this.sync === 'saved' || this.sync === 'saving')) return ''
@@ -95,7 +97,12 @@ export default {
   justify-content: space-between;
   gap: 12px;
 }
-.logo { font-size: 17px; font-style: italic; }
+.logo { font-size: 17px; font-style: italic; transition: color 0.4s; }
+.logo.is-loading,
+.logo.is-saving { color: var(--muted); }
+.logo.is-saved { color: var(--sage); }
+.logo.is-error,
+.logo.is-disabled { color: var(--accent); }
 .right { display: flex; align-items: center; gap: 10px; }
 /* 언어가 바뀌어도 버튼 위치가 움직이지 않게 너비 고정 (두 언어 중 긴 쪽에 맞춤) */
 .lang {
@@ -112,12 +119,9 @@ export default {
 
 @media (max-width: 480px) {
   .right { gap: 6px; }
-  .sync { display: none; } /* 휴대폰은 자리가 좁아서 저장 상태 글자는 숨김 */
   .app-header .lang { width: 56px; }
   .app-header .auth-btn { width: 80px; }
 }
-.sync { font-size: 12px; color: var(--muted); }
-.sync.error { color: var(--accent); }
 .user { display: flex; align-items: center; gap: 8px; }
 .avatar { width: 26px; height: 26px; border-radius: 50%; }
 .viewer { font-size: 12px; color: var(--muted); }
