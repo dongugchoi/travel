@@ -17,6 +17,7 @@ export function collectTexts (trip) {
       add(s.place)
       add(s.address)
       add(s.memo)
+      ;(s.comments || []).forEach(c => add(c && c.text))
     })
   })
   return [...set].filter(Boolean)

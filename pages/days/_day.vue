@@ -1,17 +1,17 @@
 <template>
   <section v-if="!dayData" class="missing">
     <p>{{ $t('없는 날짜예요') }}</p>
-    <NuxtLink to="/" class="back">{{ $t('← 전체 일정') }}</NuxtLink>
+    <NuxtLink to="/" class="btn btn-chip back">{{ $t('← 전체 일정') }}</NuxtLink>
   </section>
   <section v-else>
-    <NuxtLink to="/" class="back">{{ $t('← 전체 일정') }}</NuxtLink>
+    <NuxtLink to="/" class="btn btn-chip back">{{ $t('← 전체 일정') }}</NuxtLink>
 
-    <header class="day-hero">
+    <header class="day-hero rise">
       <span class="num">{{ dayData.day | pad2 }}</span>
       <div class="hero-text">
         <div class="eyebrow-row">
-          <p class="eyebrow">DAY {{ dayData.day | pad2 }}</p>
-          <button v-if="canEdit" type="button" class="edit-day" @click="openRouteDialog('day')">{{ $t('날짜 수정') }}</button>
+          <p class="eyebrow">{{ $t('{day}일차', { day: dayData.day }) }}</p>
+          <button v-if="canEdit" type="button" class="btn btn-chip edit-day" @click="openRouteDialog('day')">{{ $t('수정') }}</button>
         </div>
         <h1>{{ $tx(dayData.title) }}</h1>
         <div class="date-row">
@@ -19,12 +19,12 @@
             <span class="date-text">{{ dayData.date | koDateLong }}</span>
             <span v-if="dayData.region" class="city-tag">{{ $tx(dayData.region) }}</span>
           </p>
-          <button v-if="canEdit" type="button" class="add-btn" @click="openAdd()">{{ $t('+ 일정 추가') }}</button>
+          <button v-if="canEdit" type="button" class="btn btn-primary add-btn" @click="openAdd()">{{ $t('+ 일정 추가') }}</button>
           <!-- 로그인 안 했으면 버튼이 그냥 사라지지 않고 로그인 안내 -->
           <button
             v-else-if="authReady && !user"
             type="button"
-            class="add-btn ghost"
+            class="btn btn-glass add-btn"
             @click="signIn"
           >
             {{ $t('로그인하고 일정 추가') }}
@@ -37,17 +37,22 @@
       <ScheduleItem
         v-for="(item, index) in dayData.schedules"
         :key="`${item.time}-${index}`"
+        class="rise"
+        :style="{ '--i': staggered ? index + 1 : 0 }"
         :schedule="item"
         :editable="canEdit"
         @remove="pendingRemove = index"
         @edit="openEdit(index)"
         @navigate="$refs.route.openFromHere(item)"
-        @memo-edit="openMemo(index)"
-        @memo-delete="pendingMemoDelete = index"
+        @comment-add="addComment(index, $event)"
+        @comment-edit="openMemo(index, $event)"
+        @comment-delete="pendingMemoDelete = { index, ci: $event }"
       />
     </ul>
 
     <RouteMap
+      class="rise"
+      :style="{ '--i': staggered ? dayData.schedules.length + 1 : 0 }"
       ref="route"
       :day="dayData.day"
       :schedules="dayData.schedules"
@@ -57,17 +62,17 @@
     />
 
     <nav class="day-nav">
-      <NuxtLink v-if="prevDay" :to="`/days/${prevDay}`">← Day {{ prevDay | pad2 }}</NuxtLink>
+      <NuxtLink v-if="prevDay" :to="`/days/${prevDay}`" class="btn btn-glass">← {{ $t('{day}일차', { day: prevDay }) }}</NuxtLink>
       <span v-else />
-      <NuxtLink v-if="nextDay" :to="`/days/${nextDay}`">Day {{ nextDay | pad2 }} →</NuxtLink>
+      <NuxtLink v-if="nextDay" :to="`/days/${nextDay}`" class="btn btn-glass">{{ $t('{day}일차', { day: nextDay }) }} →</NuxtLink>
     </nav>
 
     <ScheduleDialog
       :open="addOpen || editOpen"
       :editing="editOpen"
-      :subtitle="`Day ${dayData.day} · ${$tx(dayData.title)}`"
+      :subtitle="`${$t('{day}일차', { day: dayData.day })} · ${$tx(dayData.title)}`"
       :initial="editOpen ? editInitial : dialogInitial"
-      :region="dayData.region || ''"
+      :near="dayCenter"
       @close="closeRouteDialog"
       @submit="onScheduleSubmit"
     />
@@ -85,7 +90,7 @@
     <MemoDialog
       :open="memoOpen"
       :title="memoTitle"
-      :initial="memoSchedule ? memoSchedule.memo : ''"
+      :initial="memoComment ? memoComment.text : ''"
       @close="closeRouteDialog"
       @save="saveMemo"
     />
@@ -114,12 +119,13 @@
 <script>
 import { mapState } from 'vuex'
 import routeDialog from '~/mixins/routeDialog'
+import { commentList } from '~/store'
 
 export default {
   name: 'DayPage',
   mixins: [routeDialog],
   data () {
-    return { dialogInitial: null, authReady: false, pendingRemove: null, memoIndex: null, pendingMemoDelete: null, editIndex: null }
+    return { dialogInitial: null, authReady: false, pendingRemove: null, memoIndex: null, memoCi: null, pendingMemoDelete: null, editIndex: null, staggered: true }
   },
   computed: {
     ...mapState(['canEdit', 'user']),
@@ -155,9 +161,16 @@ export default {
       const s = this.memoSchedule
       return s ? `${s.time} ${this.$tx(s.place)}` : ''
     },
+    // 고치는 중인 댓글
+    memoComment () {
+      const s = this.memoSchedule
+      return s && this.memoCi !== null ? commentList(s)[this.memoCi] : null
+    },
     memoDeleteMessage () {
-      const s = this.pendingMemoDelete !== null && this.dayData.schedules[this.pendingMemoDelete]
-      return s ? `${s.time} ${this.$tx(s.place)} — ${this.$tx(s.memo)}` : ''
+      const p = this.pendingMemoDelete
+      const s = p && this.dayData.schedules[p.index]
+      const c = s && commentList(s)[p.ci]
+      return c ? `${s.time} ${this.$tx(s.place)} — ${p.ci + 1}. ${this.$tx(c.text)}` : ''
     },
     removeTitle () {
       const s = this.pendingRemove !== null && this.dayData.schedules[this.pendingRemove]
@@ -169,6 +182,15 @@ export default {
     dayData () {
       return this.$store.getters.getDay(this.dayNumber)
     },
+    // 이날 일정 장소들의 가운데 (장소 검색에서 근처를 먼저 보여줄 때 씀). 좌표가 없으면 null
+    dayCenter () {
+      const pts = ((this.dayData && this.dayData.schedules) || []).filter(s => s.lat != null && s.lng != null)
+      if (!pts.length) return null
+      return {
+        lat: pts.reduce((a, s) => a + s.lat, 0) / pts.length,
+        lng: pts.reduce((a, s) => a + s.lng, 0) / pts.length
+      }
+    },
     prevDay () {
       return this.$store.getters.getDay(this.dayNumber - 1) ? this.dayNumber - 1 : null
     },
@@ -179,6 +201,8 @@ export default {
   mounted () {
     // 로그인 기능은 브라우저에서만 있음
     this.authReady = !!this.$tripAuth
+    // 처음 열 때만 일정이 하나씩 차례로 (나중에 추가한 건 바로 나타남)
+    setTimeout(() => { this.staggered = false }, 1200)
   },
   methods: {
     async signIn () {
@@ -221,20 +245,27 @@ export default {
         setTimeout(() => this.$router.replace(`/days/${newDay}`), 300)
       }
     },
-    openMemo (index) {
+    addComment (index, text) {
+      this.$store.dispatch('addComment', { day: this.dayNumber, index, text })
+    },
+    // 댓글 고치기 창
+    openMemo (index, ci) {
       this.memoIndex = index
+      this.memoCi = ci
       this.openRouteDialog('memo')
     },
-    saveMemo (memo) {
-      if (this.memoIndex !== null) {
-        this.$store.dispatch('setMemo', { day: this.dayNumber, index: this.memoIndex, memo })
+    saveMemo (text) {
+      if (this.memoIndex !== null && this.memoCi !== null) {
+        // 내용을 다 지우고 저장하면 그 댓글 삭제
+        const action = text.trim() ? 'updateComment' : 'removeComment'
+        this.$store.dispatch(action, { day: this.dayNumber, index: this.memoIndex, ci: this.memoCi, text })
       }
       this.closeRouteDialog()
     },
     confirmMemoDelete () {
-      const index = this.pendingMemoDelete
+      const p = this.pendingMemoDelete
       this.pendingMemoDelete = null
-      if (index !== null) this.$store.dispatch('setMemo', { day: this.dayNumber, index, memo: '' })
+      if (p) this.$store.dispatch('removeComment', { day: this.dayNumber, index: p.index, ci: p.ci })
     },
     confirmRemove () {
       const index = this.pendingRemove
@@ -243,26 +274,16 @@ export default {
     }
   },
   head () {
-    return { title: this.dayData ? `Day ${this.dayData.day} - ${this.dayData.title}` : '여행 계획' }
+    return { title: this.dayData ? `${this.dayData.day}일차 - ${this.dayData.title}` : '여행 계획' }
   }
 }
 </script>
 
 <style scoped>
-.back { color: var(--muted); font-size: 14px; }
-.eyebrow-row { display: flex; align-items: baseline; gap: 12px; }
-.edit-day {
-  border: none;
-  border-bottom: 1px solid var(--muted);
-  background: none;
-  padding: 0 0 1px;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-}
-.edit-day:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.back { margin-bottom: 4px; }
+.eyebrow-row { display: flex; align-items: center; gap: 10px; }
+.edit-day { padding: 2px 10px; font-size: 12px; }
 .missing { padding: 60px 0; text-align: center; color: var(--muted); }
-.back:hover { color: var(--accent); }
 
 .day-hero {
   display: flex;
@@ -270,7 +291,7 @@ export default {
   align-items: flex-end;
   margin: 24px 0 16px;
   padding-bottom: 24px;
-  border-bottom: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
 }
 .num { font-size: 96px; line-height: 0.85; color: var(--accent); }
 .hero-text { flex: 1; min-width: 0; }
@@ -283,18 +304,7 @@ h1 { margin: 6px 0 4px; font-size: 30px; font-weight: 600; }
   gap: 12px;
 }
 .date { margin: 0; color: var(--muted); }
-.add-btn {
-  flex-shrink: 0;
-  padding: 6px 14px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--bg);
-  font-size: 14px;
-  cursor: pointer;
-}
-.add-btn:hover { background: var(--accent); border-color: var(--accent); }
-.add-btn.ghost { background: none; color: var(--ink); }
-.add-btn.ghost:hover { color: var(--bg); }
+.add-btn { flex-shrink: 0; }
 
 .schedule-list { list-style: none; padding: 0; margin: 0 0 32px; }
 
@@ -302,15 +312,12 @@ h1 { margin: 6px 0 4px; font-size: 30px; font-weight: 600; }
   display: flex;
   justify-content: space-between;
   margin-top: 40px;
-  font-style: italic;
-  color: var(--muted);
 }
-.day-nav a:hover { color: var(--accent); }
 
 @media (max-width: 480px) {
   .day-hero { gap: 16px; }
   .num { font-size: 64px; }
   h1 { font-size: 24px; }
-  .add-btn { padding: 5px 10px; font-size: 13px; }
+  .add-btn { padding: 6px 12px; font-size: 13px; }
 }
 </style>

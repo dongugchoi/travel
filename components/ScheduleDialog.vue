@@ -9,7 +9,6 @@
       >
         <header class="head">
           <div>
-            <p class="eyebrow">{{ editing ? 'EDIT SCHEDULE' : 'ADD SCHEDULE' }}</p>
             <h2 id="schedule-dialog-title">{{ subtitle }}</h2>
           </div>
           <button type="button" class="x" :aria-label="$t('닫기')" @click="close">×</button>
@@ -61,8 +60,8 @@
           </label>
 
           <footer class="actions">
-            <button type="button" class="ghost" @click="close">{{ $t('취소') }}</button>
-            <button type="submit" class="primary">{{ editing ? $t('저장') : $t('추가') }}</button>
+            <button type="button" class="btn btn-glass" @click="close">{{ $t('취소') }}</button>
+            <button type="submit" class="btn btn-primary">{{ editing ? $t('저장') : $t('추가') }}</button>
           </footer>
         </form>
       </div>
@@ -85,7 +84,8 @@ export default {
     subtitle: { type: String, default: '' },
     // 지도에서 고른 장소 등 미리 채울 값
     initial: { type: Object, default: null },
-    region: { type: String, default: '' },
+    // 이날 일정 장소들의 가운데 { lat, lng } — 있으면 그 근처 장소를 먼저 보여줌
+    near: { type: Object, default: null },
     // true 면 "일정 수정" 창 (버튼이 "저장")
     editing: { type: Boolean, default: false }
   },
@@ -106,10 +106,7 @@ export default {
         this.searchError = ''
         this.timeError = false
         this.sessionToken = null
-        // 시간이 비어 있으면 시간 선택판부터 열어 줌
-        this.$nextTick(() => {
-          if (this.$refs.time && !this.form.time) this.$refs.time.open = true
-        })
+        // 시간 선택판은 저절로 열지 않음 (시간 칸을 눌렀을 때만)
         document.addEventListener('keydown', this.onKey, true)
       } else {
         clearTimeout(this.searchTimer)
@@ -167,13 +164,16 @@ export default {
         const { AutocompleteSuggestion, AutocompleteSessionToken } =
           await importMapsLibrary(this.$config.googleMapsKey, 'places')
         if (!this.sessionToken) this.sessionToken = new AutocompleteSessionToken()
-        const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions({
-          input: this.region && !text.includes(this.region) ? `${this.region} ${text}` : text,
+        // 입력한 그대로 검색 (도시 이름을 앞에 붙이지 않음), 일본·한국 장소만
+        const request = {
+          input: text,
           sessionToken: this.sessionToken,
           language: this.$lang,
-          region: 'jp',
-          includedRegionCodes: ['jp']
-        })
+          includedRegionCodes: ['jp', 'kr']
+        }
+        // 이날 다른 일정이 있으면 그 근처(반경 30km)를 먼저 — 다른 곳도 검색은 됨
+        if (this.near) request.locationBias = { center: this.near, radius: 30000 }
+        const { suggestions } = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
         if (text !== this.form.address.trim()) return // 그 사이에 더 입력했으면 무시
         this.suggestions = suggestions
           .filter(s => s.placePrediction)
@@ -264,13 +264,13 @@ form { display: flex; flex-direction: column; gap: 14px; }
 label, .field { display: flex; flex-direction: column; gap: 4px; }
 label span, .field-label { font-size: 12px; letter-spacing: 1px; color: var(--muted); }
 .field small { font-size: 12px; color: var(--muted); }
-.field small.ok { color: #3f7a4a; }
+.field small.ok { color: var(--sage); }
 .field small.warn { color: var(--accent); }
 input, select {
   padding: 9px 10px;
   border: 1px solid var(--line);
   background: var(--surface);
-  border-radius: 0;
+  border-radius: 10px;
 }
 input:focus, select:focus { outline: none; border-color: var(--accent); }
 
@@ -295,11 +295,8 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .suggestions small { font-size: 12px; color: var(--muted); }
 
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
-.actions button { padding: 8px 18px; cursor: pointer; border: 1px solid var(--ink); }
-.ghost { background: none; color: var(--ink); }
-.primary { background: var(--ink); color: var(--bg); }
-.primary:hover { background: var(--accent); border-color: var(--accent); }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-active { transition: opacity 0.28s; }
+.fade-leave-active { transition: opacity 0.15s; }
 .fade-enter, .fade-leave-to { opacity: 0; }
 </style>

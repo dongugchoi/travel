@@ -4,7 +4,6 @@
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="memo-dialog-title">
         <header class="head">
           <div>
-            <p class="eyebrow">MEMO</p>
             <h2 id="memo-dialog-title">{{ title }}</h2>
           </div>
           <button type="button" class="x" :aria-label="$t('닫기')" @click="$emit('close')">×</button>
@@ -20,8 +19,8 @@
             />
           </label>
           <footer class="actions">
-            <button type="button" class="ghost" @click="$emit('close')">{{ $t('취소') }}</button>
-            <button type="submit" class="primary">{{ $t('저장') }}</button>
+            <button type="button" class="btn btn-glass" @click="$emit('close')">{{ $t('취소') }}</button>
+            <button type="submit" class="btn btn-primary">{{ $t('저장') }}</button>
           </footer>
         </form>
       </div>
@@ -102,10 +101,7 @@ textarea {
 }
 textarea:focus { outline: none; border-color: var(--accent); }
 .actions { display: flex; justify-content: flex-end; gap: 8px; }
-.actions button { padding: 8px 18px; cursor: pointer; border: 1px solid var(--ink); }
-.ghost { background: none; color: var(--ink); }
-.primary { background: var(--ink); color: var(--bg); }
-.primary:hover { background: var(--accent); border-color: var(--accent); }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-active { transition: opacity 0.28s; }
+.fade-leave-active { transition: opacity 0.15s; }
 .fade-enter, .fade-leave-to { opacity: 0; }
 </style>

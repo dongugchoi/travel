@@ -3,56 +3,102 @@
     <div class="time">{{ schedule.time }}</div>
     <div class="body">
       <!-- 종류가 있는 예전 일정만 표시 (새 일정은 종류 없음) -->
-      <div class="meta">
-        <span v-if="schedule.category" class="tag">{{ schedule.category | category }}</span>
-        <!-- 누가 추가했는지 -->
-        <span v-if="schedule.by" class="by">{{ $t(schedule.by) }}</span>
+      <!-- 이름은 메모에만 표시 (일정 위에는 안 보임) -->
+      <div v-if="schedule.category" class="meta">
+        <span class="tag">{{ schedule.category | category }}</span>
       </div>
       <strong class="place">{{ $tx(schedule.place) }}</strong>
       <p v-if="schedule.address" class="address">{{ $tx(schedule.address) }}</p>
 
-      <!-- 시간마다 메모칸 -->
-      <div v-if="schedule.memo" class="memo-box">
-        <p class="memo-text">{{ $tx(schedule.memo) }}</p>
-        <!-- 왼쪽: 메모 수정·삭제 / 오른쪽 끝: 쓴 사람 -->
-        <div v-if="editable || schedule.memoBy" class="memo-foot">
-          <div class="memo-actions">
-            <template v-if="editable">
-              <button type="button" class="link" @click="$emit('memo-edit')">{{ $t('메모 수정') }}</button>
-              <button type="button" class="link" @click="$emit('memo-delete')">{{ $t('메모 삭제') }}</button>
-            </template>
-          </div>
-          <span v-if="schedule.memoBy" class="memo-by">{{ $t(schedule.memoBy) }}</span>
-        </div>
+      <!-- 댓글형 메모: 1. 2. 3. … (오른쪽 끝에 쓴 사람) -->
+      <div v-if="comments.length || writing" class="memo-box">
+        <ol v-if="comments.length" class="comments">
+          <li v-for="(c, ci) in comments" :key="ci" class="comment">
+            <span class="num">{{ ci + 1 }}.</span>
+            <div class="comment-body">
+              <p class="memo-text">{{ $tx(c.text) }}</p>
+              <div v-if="editable" class="memo-actions">
+                <button type="button" class="text-btn small" @click="$emit('comment-edit', ci)">{{ $t('수정') }}</button>
+                <button type="button" class="text-btn danger small" @click="$emit('comment-delete', ci)">{{ $t('삭제') }}</button>
+              </div>
+            </div>
+            <span v-if="c.by" class="memo-by">{{ $t(c.by) }}</span>
+          </li>
+        </ol>
+
+        <!-- 댓글 달기: 바로 입력하고 등록 -->
+        <form v-if="editable" class="reply" @submit.prevent="submitReply">
+          <textarea
+            ref="reply"
+            v-model="reply"
+            rows="1"
+            :aria-label="$t('메모 달기')"
+            @input="autoGrow"
+            @keydown.enter.exact.prevent="submitReply"
+          />
+          <button type="submit" class="btn btn-primary btn-sm reply-btn" :disabled="!reply.trim()">{{ $t('등록') }}</button>
+        </form>
       </div>
 
       <div class="links">
         <button
           v-if="schedule.address || schedule.place"
           type="button"
-          class="link"
+          class="btn btn-chip"
           @click="$emit('navigate')"
         >
           {{ $t('지도 보기') }}
         </button>
-        <button v-if="editable && !schedule.memo" type="button" class="link" @click="$emit('memo-edit')">
+        <button v-if="editable && !comments.length && !writing" type="button" class="btn btn-chip" @click="startWriting">
           {{ $t('메모 추가') }}
         </button>
       </div>
     </div>
     <div v-if="editable" class="item-actions">
-      <button type="button" class="remove" @click="$emit('edit')">{{ $t('수정') }}</button>
-      <button type="button" class="remove" :aria-label="$t('일정 삭제')" @click="$emit('remove')">{{ $t('삭제') }}</button>
+      <button type="button" class="text-btn remove" @click="$emit('edit')">{{ $t('수정') }}</button>
+      <button type="button" class="text-btn danger remove" :aria-label="$t('일정 삭제')" @click="$emit('remove')">{{ $t('삭제') }}</button>
     </div>
   </li>
 </template>
 
 <script>
+import { commentList } from '~/store'
+
 export default {
   name: 'ScheduleItem',
   props: {
     schedule: { type: Object, required: true },
     editable: { type: Boolean, default: false }
+  },
+  data () {
+    return { reply: '', writing: false }
+  },
+  computed: {
+    // 댓글 목록 (예전 한 칸짜리 메모는 1번으로 보여줌 — 화면에서는 데이터를 바꾸지 않음)
+    comments () {
+      return commentList(this.schedule)
+    }
+  },
+  methods: {
+    startWriting () {
+      this.writing = true
+      this.$nextTick(() => this.$refs.reply && this.$refs.reply.focus())
+    },
+    submitReply () {
+      const text = this.reply.trim()
+      if (!text) return
+      this.$emit('comment-add', text)
+      this.reply = ''
+      this.writing = false
+      this.$nextTick(() => this.autoGrow())
+    },
+    // 글이 길어지면 입력칸도 같이 커지게
+    autoGrow () {
+      const el = this.$refs.reply
+      if (!el) return
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
   }
 }
 </script>
@@ -75,7 +121,6 @@ export default {
 .meta { display: flex; gap: 10px; align-items: baseline; min-height: 0; }
 .tag { font-size: 11px; letter-spacing: 2px; color: var(--muted); }
 .by { font-size: 11px; color: var(--muted); }
-.memo-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 6px; }
 .memo-by { font-size: 12px; color: var(--muted); }
 .place { display: block; font-size: 18px; font-weight: 600; margin-top: 2px; }
 .address { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
@@ -94,27 +139,44 @@ export default {
   white-space: pre-line; /* 줄바꿈 그대로 */
   word-break: break-word;
 }
-.memo-actions { display: flex; gap: 12px; }
+.memo-actions { display: flex; gap: 10px; margin-top: 3px; }
 
-.links { display: flex; gap: 14px; margin-top: 8px; }
-/* 테두리 없이 밑줄만 있는 글자 버튼 */
-.link {
-  border: none;
-  border-bottom: 1px solid var(--muted);
-  background: none;
-  padding: 0 0 1px;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
+/* 댓글: 번호 · 내용 · (오른쪽 끝) 이름 */
+.comments { list-style: none; margin: 0; padding: 0; }
+.comment {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--line);
 }
-.link:hover { border-bottom-color: var(--accent); color: var(--accent); }
-.item-actions { align-self: center; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-.remove {
-  border: none;
-  background: none;
-  color: var(--muted);
-  font-size: 13px;
-  cursor: pointer;
+.comment:first-child { padding-top: 0; }
+.num { flex-shrink: 0; width: 18px; font-size: 14px; line-height: 1.6; color: var(--accent); font-style: italic; }
+.comment-body { flex: 1; min-width: 0; }
+.comment .memo-by { flex-shrink: 0; line-height: 1.9; }
+.text-btn.small { font-size: 12px; }
+
+/* 댓글 달기 */
+.reply { display: flex; align-items: flex-end; gap: 8px; margin-top: 10px; }
+.comments + .reply { margin-top: 10px; }
+.memo-box > .reply:first-child { margin-top: 0; }
+.reply textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  overflow: hidden;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  border-radius: 10px;
 }
-.remove:hover { color: var(--accent); }
+.reply textarea:focus { outline: none; border-color: var(--accent); }
+.reply-btn { flex-shrink: 0; }
+
+.links { display: flex; gap: 8px; margin-top: 10px; }
+.item-actions { align-self: flex-start; margin-top: 4px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 </style>

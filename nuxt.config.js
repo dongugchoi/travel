@@ -28,7 +28,7 @@ export default {
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;600&display=swap'
+        href: 'https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;600&family=Nanum+Brush+Script&display=swap'
       }
     ]
   },

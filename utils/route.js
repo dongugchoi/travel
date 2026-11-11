@@ -13,6 +13,8 @@ export const modeInfo = value => MODES.find(m => m.value === value) || MODES[0]
 export function placeQuery (s, region) {
   const text = (s.address || s.place || '').trim()
   if (!text) return ''
+  // 장소 검색 목록에서 고른 장소(좌표·ID 있음)는 그대로. 직접 친 이름만 도시를 붙여 찾음
+  if (s.placeId || (s.lat != null && s.lng != null)) return text
   return region && !text.includes(region) ? `${region} ${text}` : text
 }
 

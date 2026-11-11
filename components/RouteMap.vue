@@ -1,7 +1,7 @@
 <template>
   <section class="route-map">
     <div class="head">
-      <p class="eyebrow">ROUTE</p>
+      <p class="eyebrow">{{ $t('동선') }}</p>
       <span class="basis">{{ $t('도보 기준 시간') }}</span>
     </div>
 
@@ -18,16 +18,16 @@
           </small>
         </div>
         <div class="leg-actions">
-          <button type="button" class="leg-btn" @click="openMap(i, 'transit')">{{ $t('대중교통') }}</button>
-          <button type="button" class="leg-btn" @click="openMap(i, 'walking')">{{ $t('도보') }}</button>
+          <button type="button" class="btn btn-chip leg-btn" @click="openMap(i, 'transit')">{{ $t('대중교통') }}</button>
+          <button type="button" class="btn btn-chip leg-btn" @click="openMap(i, 'walking')">{{ $t('도보') }}</button>
         </div>
       </li>
     </ol>
     <p v-else class="empty">{{ $t('장소가 있는 일정이 2개 이상이면 구간별 이동 경로가 나와요.') }}</p>
 
     <div v-if="legs.length" class="foot">
-      <button type="button" class="map-btn" @click="openMap(0, 'walking')">{{ $t('지도 보기') }}</button>
-      <button type="button" class="all-route" @click="openAll">{{ $t('이날 전체 동선 보기') }}</button>
+      <button type="button" class="btn btn-primary map-btn" @click="openMap(0, 'walking')">{{ $t('지도 보기') }}</button>
+      <button type="button" class="btn btn-glass btn-sm all-route" @click="openAll">{{ $t('이날 전체 동선 보기') }}</button>
     </div>
 
     <MapDialog
@@ -141,28 +141,9 @@ export default {
 .leg-text b { color: var(--ink); font-weight: 600; }
 .arrow { color: var(--accent); }
 .leg-actions { display: flex; gap: 6px; flex-shrink: 0; }
-.leg-btn {
-  border: 1px solid var(--line);
-  background: none;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.leg-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .empty { color: var(--muted); font-size: 14px; }
 .foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
-.map-btn {
-  padding: 8px 18px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--bg);
-  cursor: pointer;
-}
-.map-btn:hover { background: var(--accent); border-color: var(--accent); }
-.all-route { border: none; border-bottom: 1px solid var(--muted); background: none; padding: 0 0 1px; font-size: 13px; color: var(--muted); cursor: pointer; }
-.all-route:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
 @media (max-width: 480px) {
   .legs li { flex-wrap: wrap; }

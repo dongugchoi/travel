@@ -1,22 +1,26 @@
 <template>
   <section>
-    <h1 class="trip-title">{{ $tx(trip.title) }}</h1>
-    <div class="summary-row">
-      <p class="summary">
-        {{ trip.startDate | koDate }} – {{ trip.endDate | koDate }}
-      </p>
-      <button v-if="canEdit" type="button" class="add-day" @click="addDay">{{ $t('+ 날짜 추가') }}</button>
+    <div class="summary-row rise">
+      <div class="headline">
+        <!-- 여행 제목: 붓글씨 -->
+        <h1 v-if="trip.title" class="brush-title">{{ $tx(trip.title) }}</h1>
+      </div>
+      <button v-if="canEdit" type="button" class="btn btn-glass btn-sm add-day" @click="addDay">{{ $t('+ 날짜 추가') }}</button>
     </div>
 
-    <div class="day-list">
+    <div v-if="days.length" class="day-list">
       <DayCard
-        v-for="day in days"
+        v-for="(day, i) in days"
         :key="day.day"
+        class="rise"
+        :style="{ '--i': staggered ? i + 1 : 0 }"
         :day="day"
-        :removable="days.length > 1"
+        :removable="canEdit"
         @remove="pendingDay = day.day"
       />
     </div>
+    <!-- 날짜가 하나도 없을 때: 화면 가운데 안내 -->
+    <p v-else class="empty rise">{{ $t('일정을 추가해주세요.') }}</p>
 
     <ConfirmDialog
       :open="pendingDay !== null"
@@ -37,7 +41,11 @@ import { t } from '~/plugins/i18n'
 export default {
   name: 'IndexPage',
   data () {
-    return { pendingDay: null }
+    // staggered: 처음 열 때만 카드가 하나씩 차례로 (나중에 추가한 건 바로 나타남)
+    return { pendingDay: null, staggered: true }
+  },
+  mounted () {
+    setTimeout(() => { this.staggered = false }, 1200)
   },
   computed: {
     ...mapState(['trip', 'canEdit']),
@@ -58,7 +66,10 @@ export default {
 
       const index = this.days.indexOf(day)
       const last = this.days.length - 1
-      if (index === 0) {
+      if (last === 0) {
+        // 마지막 남은 날짜
+        parts.push(t('남은 날짜가 없어져요.'))
+      } else if (index === 0) {
         parts.push(t('여행 시작일이 {date}로 바뀌어요.', { date: koDateLong(this.days[1].date) }))
       } else if (index === last) {
         parts.push(t('여행 마지막 날이 {date}로 바뀌어요.', { date: koDateLong(this.days[last - 1].date) }))
@@ -89,24 +100,41 @@ export default {
 </script>
 
 <style scoped>
-.trip-title { margin: 6px 0; font-size: 34px; font-weight: 400; }
+/* 여행 제목은 빼고 날짜를 맨 위에 */
 .summary-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 32px;
+  margin: -8px 0 16px;
 }
-.summary { margin: 0; color: var(--muted); }
-.add-day {
-  flex-shrink: 0;
-  padding: 5px 12px;
-  border: 1px solid var(--ink);
-  background: none;
+.headline { min-width: 0; }
+/* 붓으로 쓴 듯한 제목, 타워 불빛처럼 은은한 주황 번짐 */
+.brush-title {
+  margin: 0 0 2px;
+  font-family: 'Nanum Brush Script', var(--font);
+  font-weight: 400;
+  font-size: 46px;
+  line-height: 1.05;
+  letter-spacing: 1px;
   color: var(--ink);
-  font-size: 13px;
-  cursor: pointer;
+  text-shadow: 0 0 18px rgba(240, 138, 84, 0.45), 0 2px 4px rgba(0, 0, 0, 0.5);
+  transform: rotate(-2deg);
+  transform-origin: left center;
+  word-break: keep-all;
 }
-.add-day:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.add-day { flex-shrink: 0; }
 .day-list { border-bottom: 1px solid var(--line); }
+/* 날짜가 없을 때 안내: 남은 화면 높이의 가운데 */
+.empty {
+  min-height: calc(100dvh - 240px);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 17px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
 </style>

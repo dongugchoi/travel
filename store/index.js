@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import trip from '~/data/trip'
 import { buildLegs, routeKey, toWaypoint, computeRoute, MODES } from '~/utils/route'
 import { collectTexts, translateToJa } from '~/utils/translate'
@@ -13,6 +14,27 @@ const inflight = new Set()
 let translating = false
 
 // 지금 로그인한 사람 이름: '동욱' / '유나' (목록에 없으면 구글 이름)
+const scheduleAt = (state, day, index) => {
+  const target = state.trip.days.find(d => d.day === day)
+  return target && target.schedules[index]
+}
+
+// 화면용 댓글 목록 (데이터는 바꾸지 않음). 예전 한 칸짜리 메모는 1번으로
+export function commentList (s) {
+  if (Array.isArray(s.comments)) return s.comments
+  return s.memo ? [{ text: s.memo, by: s.memoBy || '' }] : []
+}
+
+// 일정의 댓글 목록. 예전 한 칸짜리 메모(memo)가 있으면 1번 댓글로 옮김
+export function commentsOf (s) {
+  if (!Array.isArray(s.comments)) {
+    Vue.set(s, 'comments', s.memo ? [{ text: s.memo, by: s.memoBy || '', at: '' }] : [])
+    Vue.delete(s, 'memo')
+    Vue.delete(s, 'memoBy')
+  }
+  return s.comments
+}
+
 const authorName = state => (state.user && (state.user.member || state.user.name)) || null
 
 export const state = () => ({
@@ -78,11 +100,10 @@ export const mutations = {
     })
     normalizeDays(state.trip)
   },
-  // 하루 삭제 (최소 하루는 남김). 그 날만 지우고 다른 날짜는 그대로 둠
+  // 하루 삭제 (마지막 하나도 지울 수 있음). 그 날만 지우고 다른 날짜는 그대로 둠
   // (Day 번호만 1부터 다시 매기고, 시작일·마지막 날을 맞춤)
   REMOVE_DAY (state, dayNumber) {
     const days = state.trip.days
-    if (days.length <= 1) return
     const index = days.findIndex(d => d.day === dayNumber)
     if (index < 0) return
     days.splice(index, 1)
@@ -136,15 +157,22 @@ export const mutations = {
       target.schedules.sort((a, b) => a.time.localeCompare(b.time))
     }
   },
-  // 일정 메모 쓰기/고치기/지우기 (빈 글자면 지움)
-  SET_MEMO (state, { day, index, memo, by }) {
-    const target = state.trip.days.find(d => d.day === day)
-    const s = target && target.schedules[index]
-    if (!s) return
-    s.memo = (memo || '').trim()
-    // 메모를 쓴 사람 (지우면 같이 지움)
-    if (s.memo && by) s.memoBy = by
-    if (!s.memo) delete s.memoBy
+  // 일정마다 댓글형 메모 (1. 2. 3. …) — 추가 / 고치기 / 지우기
+  ADD_COMMENT (state, { day, index, text, by }) {
+    const s = scheduleAt(state, day, index)
+    const t = (text || '').trim()
+    if (!s || !t) return
+    commentsOf(s).push({ text: t, by: by || '', at: new Date().toISOString() })
+  },
+  UPDATE_COMMENT (state, { day, index, ci, text }) {
+    const s = scheduleAt(state, day, index)
+    const t = (text || '').trim()
+    const c = s && commentsOf(s)[ci]
+    if (c && t) c.text = t
+  },
+  REMOVE_COMMENT (state, { day, index, ci }) {
+    const s = scheduleAt(state, day, index)
+    if (s) commentsOf(s).splice(ci, 1)
   },
   // 일정 고치기 (시간·할 일·장소). 메모·작성자는 그대로 두고, 시간순 다시 정렬
   UPDATE_SCHEDULE (state, { day, index, schedule }) {
@@ -216,7 +244,7 @@ export const actions = {
   },
 
   async removeDay ({ state, commit, dispatch }, dayNumber) {
-    if (!state.canEdit || state.trip.days.length <= 1) return
+    if (!state.canEdit) return
     commit('REMOVE_DAY', dayNumber)
     await dispatch('saveTrip')
     dispatch('ensureTranslations')
@@ -261,11 +289,22 @@ export const actions = {
     }
   },
 
-  async setMemo ({ state, commit, dispatch }, payload) {
+  async addComment ({ state, commit, dispatch }, payload) {
     if (!state.canEdit) return
-    commit('SET_MEMO', { ...payload, by: authorName(state) })
+    commit('ADD_COMMENT', { ...payload, by: authorName(state) })
     await dispatch('saveTrip')
     dispatch('ensureTranslations')
+  },
+  async updateComment ({ state, commit, dispatch }, payload) {
+    if (!state.canEdit) return
+    commit('UPDATE_COMMENT', payload)
+    await dispatch('saveTrip')
+    dispatch('ensureTranslations')
+  },
+  async removeComment ({ state, commit, dispatch }, payload) {
+    if (!state.canEdit) return
+    commit('REMOVE_COMMENT', payload)
+    await dispatch('saveTrip')
   },
 
   // 날짜 정보 고치기. 바뀐 뒤의 Day 번호를 돌려줌 (날짜가 바뀌면 번호가 달라질 수 있음)

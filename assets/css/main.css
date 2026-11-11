@@ -1,14 +1,15 @@
 * { box-sizing: border-box; }
 
-/* 여행 매거진 테마 */
+/* 여행 매거진 테마 — 야간판 (도쿄타워 야경 배경에 맞춘 남색 + 타워 주황) */
 :root {
-  --bg: #f5f0e6;
-  --surface: #fbf8f2;
-  --ink: #2b2622;
-  --muted: #9a8a76;
-  --line: #d8ccb8;
-  --accent: #c0583a;
-  --sage: #6b7c5e;   /* 도시 태그, 저장됨 표시 */
+  color-scheme: dark; /* 날짜 선택 등 기본 입력창도 어두운 색으로 */
+  --bg: #111a26;
+  --surface: #182333;
+  --ink: #f1ebe0;
+  --muted: #bcc6d2;
+  --line: rgba(241, 235, 224, 0.28);
+  --accent: #f08a54;
+  --sage: #a7c08f;   /* 도시 태그, 저장됨 표시 */
   --font: 'Noto Serif KR', Georgia, serif;
 }
 
@@ -57,5 +58,137 @@ button, input, select { font: inherit; color: inherit; }
   font-style: normal;
   letter-spacing: 1.5px;
   line-height: 1.6;
-  background: rgba(107, 124, 94, 0.08);
+  background: rgba(167, 192, 143, 0.1);
+}
+
+/* 야경 사진 위 글씨가 묻히지 않게 살짝 그림자 */
+main.container { text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55); }
+main.container button,
+main.container input,
+main.container textarea { text-shadow: none; }
+
+/* ───────── 애니메이션 ───────── */
+
+/* 등장: 아래에서 살짝 올라오며 나타남. --i 순서대로 조금씩 늦게 (하나씩 스르륵) */
+.rise {
+  animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* 터치 반응: 버튼·링크를 누르는 순간 살짝 눌림 */
+button, a {
+  transition: transform 0.12s ease, background-color 0.2s, color 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+button:active:not(:disabled), a:active { transform: scale(0.96); }
+/* 날짜 카드는 누르면 전체가 살짝 */
+.mag:active { transform: scale(0.985); }
+
+/* 창(다이얼로그)이 열릴 때 아래에서 부드럽게 올라오고, 닫힐 때 살짝 내려감 */
+.fade-enter-active .dialog,
+.fade-enter-active .sheet { transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.fade-leave-active .dialog,
+.fade-leave-active .sheet { transition: transform 0.15s ease-in; }
+.fade-enter .dialog,
+.fade-enter .sheet { transform: translateY(28px); }
+.fade-leave-to .dialog,
+.fade-leave-to .sheet { transform: translateY(14px); }
+
+/* "동작 줄이기"를 켠 기기에서는 움직임 없이 */
+@media (prefers-reduced-motion: reduce) {
+  .rise { animation: none; }
+  button:active, a:active, .mag:active { transform: none; }
+  .fade-enter .dialog, .fade-enter .sheet, .fade-leave-to .dialog, .fade-leave-to .sheet { transform: none; }
+}
+
+/* ───────── 버튼 ─────────
+   btn-primary : 타워 불빛 같은 주황 알약 버튼 (주요 동작)
+   btn-glass   : 밤하늘 위 유리 같은 반투명 알약 (보조 동작)
+   btn-chip    : 작은 유리 알약 (언어·로그아웃·대중교통/도보 등)
+   btn-danger  : 삭제 확인
+   text-btn    : 테두리 없는 작은 글자 버튼 (수정·삭제)                 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  cursor: pointer;
+  text-shadow: none;
+  transition: transform 0.15s ease, box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease, color 0.25s ease, filter 0.25s ease;
+}
+.btn-sm { padding: 5px 13px; font-size: 13px; }
+.btn:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #f8b07a 0%, #f08a54 55%, #e06d3a 100%);
+  color: #1d130d;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(240, 138, 84, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow: 0 6px 22px rgba(240, 138, 84, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-glass,
+.btn-chip {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(241, 235, 224, 0.24);
+  color: var(--ink);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.btn-glass:hover:not(:disabled),
+.btn-chip:hover:not(:disabled) {
+  border-color: rgba(240, 138, 84, 0.7);
+  color: #ffd2b5;
+  background: rgba(240, 138, 84, 0.12);
+  box-shadow: 0 0 14px rgba(240, 138, 84, 0.25);
+}
+.btn-chip { padding: 4px 12px; font-size: 12.5px; }
+.btn-chip.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #f2805f, #d9533a);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 14px rgba(217, 83, 58, 0.4);
+}
+.btn-danger:hover { transform: translateY(-1px); filter: brightness(1.06); }
+
+.text-btn {
+  border: none;
+  background: none;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  text-shadow: none;
+  transition: color 0.2s;
+}
+.text-btn:hover { color: #ffd2b5; }
+.text-btn.danger:hover { color: #ff9a7a; }
+
+/* 창(다이얼로그)은 모서리를 둥글게 — 알약 버튼과 어울리게 */
+.dialog, .sheet {
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(241, 235, 224, 0.06);
+}
+@media (max-width: 600px) {
+  .sheet { border-radius: 18px 18px 0 0; }
 }

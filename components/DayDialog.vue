@@ -4,7 +4,6 @@
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="day-dialog-title">
         <header class="head">
           <div>
-            <p class="eyebrow">DAY</p>
             <h2 id="day-dialog-title">{{ $t('날짜 수정') }}</h2>
           </div>
           <button type="button" class="x" :aria-label="$t('닫기')" @click="$emit('close')">×</button>
@@ -26,8 +25,8 @@
             <small>{{ $t('지도에서 장소를 찾을 때 앞에 붙여요') }}</small>
           </label>
           <footer class="actions">
-            <button type="button" class="ghost" @click="$emit('close')">{{ $t('취소') }}</button>
-            <button type="submit" class="primary">{{ $t('저장') }}</button>
+            <button type="button" class="btn btn-glass" @click="$emit('close')">{{ $t('취소') }}</button>
+            <button type="submit" class="btn btn-primary">{{ $t('저장') }}</button>
           </footer>
         </form>
       </div>
@@ -109,17 +108,14 @@ input {
   padding: 9px 10px;
   border: 1px solid var(--line);
   background: var(--surface);
-  border-radius: 0;
+  border-radius: 10px;
   font: inherit;
   font-size: 15px;
   min-height: 40px;
 }
 input:focus { outline: none; border-color: var(--accent); }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
-.actions button { padding: 8px 18px; cursor: pointer; border: 1px solid var(--ink); }
-.ghost { background: none; color: var(--ink); }
-.primary { background: var(--ink); color: var(--bg); }
-.primary:hover { background: var(--accent); border-color: var(--accent); }
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-active { transition: opacity 0.28s; }
+.fade-leave-active { transition: opacity 0.15s; }
 .fade-enter, .fade-leave-to { opacity: 0; }
 </style>

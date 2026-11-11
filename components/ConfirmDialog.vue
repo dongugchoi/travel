@@ -5,8 +5,8 @@
         <h2 id="confirm-title">{{ title }}</h2>
         <p id="confirm-body">{{ message }}</p>
         <div class="actions">
-          <button ref="cancel" type="button" class="ghost" @click="$emit('cancel')">{{ $t('취소') }}</button>
-          <button type="button" class="danger" @click="$emit('confirm')">{{ confirmLabel }}</button>
+          <button ref="cancel" type="button" class="btn btn-glass" @click="$emit('cancel')">{{ $t('취소') }}</button>
+          <button type="button" class="btn btn-danger" @click="$emit('confirm')">{{ confirmLabel }}</button>
         </div>
       </div>
     </div>
@@ -56,6 +56,7 @@ export default {
   padding: 16px;
 }
 .box {
+  border-radius: 18px;
   width: 100%;
   max-width: 360px;
   background: var(--bg);
@@ -66,11 +67,8 @@ export default {
 h2 { margin: 0 0 8px; font-size: 19px; font-weight: 600; }
 p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.actions button { padding: 8px 18px; cursor: pointer; border: 1px solid var(--ink); font-size: 14px; }
-.ghost { background: none; color: var(--ink); }
-.danger { background: var(--accent); border-color: var(--accent) !important; color: #fff; }
-.danger:hover { filter: brightness(0.92); }
 
-.fade-enter-active, .fade-leave-active { transition: opacity 0.15s; }
+.fade-enter-active { transition: opacity 0.28s; }
+.fade-leave-active { transition: opacity 0.15s; }
 .fade-enter, .fade-leave-to { opacity: 0; }
 </style>

@@ -8,7 +8,7 @@
         <!-- 언어 버튼 하나: 지금 언어가 보이고, 누르면 다른 언어로 바뀜 -->
         <button
           type="button"
-          class="lang"
+          class="btn btn-chip lang"
           :lang="currentLang.value"
           :aria-label="$t('언어')"
           @click="setLang(otherLang.value)"
@@ -18,11 +18,11 @@
 
         <!-- 로그인은 브라우저에서만 동작 (mounted 뒤에 authReady 가 켜짐) -->
         <template v-if="authReady">
-          <button v-if="!user" type="button" class="auth-btn" @click="signIn">{{ $t('로그인') }}</button>
+          <button v-if="!user" type="button" class="btn btn-chip auth-btn" @click="signIn">{{ $t('로그인') }}</button>
           <div v-else class="user">
             <img v-if="user.photo" :src="user.photo" alt="" class="avatar" referrerpolicy="no-referrer">
             <span v-if="!canEdit" class="viewer" :title="$t('이 계정은 일정을 고칠 수 없어요')">{{ $t('보기 전용') }}</span>
-            <button type="button" class="auth-btn" @click="signOut">{{ $t('로그아웃') }}</button>
+            <button type="button" class="btn btn-chip auth-btn" @click="signOut">{{ $t('로그아웃') }}</button>
           </div>
         </template>
       </div>
@@ -87,7 +87,13 @@ export default {
 </script>
 
 <style scoped>
-.app-header { border-bottom: 1px solid var(--line); }
+.app-header {
+  border-bottom: 1px solid var(--line);
+  /* 유리처럼 비치는 헤더 */
+  background: rgba(17, 26, 38, 0.35);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
 .inner {
   max-width: 760px;
   margin: 0 auto;
@@ -105,17 +111,7 @@ export default {
 .logo.is-disabled { color: var(--accent); }
 .right { display: flex; align-items: center; gap: 10px; }
 /* 언어가 바뀌어도 버튼 위치가 움직이지 않게 너비 고정 (두 언어 중 긴 쪽에 맞춤) */
-.lang {
-  width: 64px;
-  border: 1px solid var(--line);
-  background: none;
-  padding: 4px 0;
-  font-size: 13px;
-  text-align: center;
-  color: var(--ink);
-  cursor: pointer;
-}
-.lang:hover { border-color: var(--accent); color: var(--accent); }
+.lang { width: 64px; padding-left: 0; padding-right: 0; }
 
 @media (max-width: 480px) {
   .right { gap: 6px; }
@@ -123,20 +119,10 @@ export default {
   .app-header .auth-btn { width: 80px; }
 }
 .user { display: flex; align-items: center; gap: 8px; }
-.avatar { width: 26px; height: 26px; border-radius: 50%; }
+.avatar { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px rgba(241, 235, 224, 0.2); }
 .viewer { font-size: 12px; color: var(--muted); }
 /* 로그인/로그아웃 ↔ ログイン/ログアウト: 긴 쪽(ログアウト)에 맞춘 고정 너비 */
-.auth-btn {
-  width: 88px;
-  border: 1px solid var(--line);
-  background: none;
-  padding: 4px 0;
-  font-size: 13px;
-  text-align: center;
-  white-space: nowrap;
-  cursor: pointer;
-}
-.auth-btn:hover { border-color: var(--accent); color: var(--accent); }
+.auth-btn { width: 88px; padding-left: 0; padding-right: 0; }
 .auth-error {
   max-width: 760px;
   margin: 0 auto;

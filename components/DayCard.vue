@@ -21,14 +21,14 @@
 
     <div v-if="canEdit" class="card-actions">
       <!-- 이 날짜로 가서 일정 추가 창을 바로 엶 -->
-      <NuxtLink :to="{ path: `/days/${day.day}`, query: { dialog: 'add' } }" class="add">
+      <NuxtLink :to="{ path: `/days/${day.day}`, query: { dialog: 'add' } }" class="btn btn-primary btn-sm add">
         {{ $t('+ 일정 추가') }}
       </NuxtLink>
       <!-- 날짜 삭제 (아이폰은 호버가 없어서 항상 보이게) -->
       <button
         v-if="removable"
         type="button"
-        class="remove"
+        class="text-btn danger remove"
         :aria-label="$t('{day}일차 날짜 삭제', { day: day.day })"
         @click="$emit('remove')"
       >
@@ -55,6 +55,8 @@ export default {
 
 <style scoped>
 .mag-wrap { position: relative; border-top: 1px solid var(--line); }
+/* 첫 카드 위 줄은 없음 (붓글씨 제목 아래를 시원하게) */
+.mag-wrap:first-child { border-top: none; }
 .mag {
   display: flex;
   gap: 24px;
@@ -84,29 +86,11 @@ export default {
   align-items: flex-end;
   gap: 10px;
 }
-/* 일정의 "삭제"와 같은 모양: 테두리 없는 작은 글자 */
-.remove {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--muted);
-  font-size: 13px;
-  cursor: pointer;
-}
-.remove:hover { color: var(--accent); }
-.add {
-  padding: 5px 12px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--bg);
-  font-size: 13px;
-}
-.add:hover { background: var(--accent); border-color: var(--accent); }
 
 @media (max-width: 480px) {
   .mag { gap: 16px; }
   .mag-num { font-size: 44px; min-width: 56px; }
   .mag-title { font-size: 20px; padding-right: 92px; }
-  .add { padding: 4px 9px; font-size: 12px; }
+  .add { padding: 4px 10px; font-size: 12px; }
 }
 </style>

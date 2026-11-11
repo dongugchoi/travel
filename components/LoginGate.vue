@@ -13,14 +13,14 @@
     <template v-else-if="!user">
       <h1>{{ $t('여행') }}</h1>
       <p class="muted">{{ $t('로그인한 사람만 볼 수 있어요') }}</p>
-      <button type="button" class="primary" @click="signIn">{{ $t('구글로 로그인') }}</button>
+      <button type="button" class="btn btn-primary" @click="signIn">{{ $t('구글로 로그인') }}</button>
       <p v-if="error" class="error">{{ error }}</p>
     </template>
 
     <template v-else>
       <h1>{{ $t('여행') }}</h1>
       <p class="muted">{{ $t('이 계정으로는 볼 수 없어요') }}</p>
-      <button type="button" class="ghost" @click="$tripAuth.signOut()">{{ $t('다른 계정으로 로그인') }}</button>
+      <button type="button" class="btn btn-glass" @click="$tripAuth.signOut()">{{ $t('다른 계정으로 로그인') }}</button>
     </template>
   </section>
 </template>
@@ -66,10 +66,7 @@ export default {
 h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 6px; }
 .muted { margin: 0; color: var(--muted); }
 .error { margin: 0; color: var(--accent); font-size: 13px; }
-button { padding: 10px 22px; cursor: pointer; border: 1px solid var(--ink); font-size: 15px; }
-.primary { background: var(--ink); color: var(--bg); }
-.primary:hover { background: var(--accent); border-color: var(--accent); }
-.ghost { background: none; color: var(--ink); }
+button { padding: 10px 24px; font-size: 15px; }
 .spinner {
   width: 28px;
   height: 28px;

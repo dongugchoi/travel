@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="page">
+    <TowerBackdrop />
     <AppHeader />
     <main class="container">
       <!-- 두 분(편집자)만 일정을 볼 수 있음. 아니면 로그인 안내 -->
@@ -28,3 +29,9 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* 헤더·본문을 배경 도쿄타워보다 위에 */
+.page > header,
+.page > main { position: relative; z-index: 1; }
+</style>
