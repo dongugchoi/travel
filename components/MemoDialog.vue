@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-if="open" class="backdrop" @click.self="$emit('close')">
+    <div v-if="open" class="backdrop">
       <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="memo-dialog-title">
         <header class="head">
           <div>

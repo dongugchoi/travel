@@ -32,6 +32,6 @@ export default {
 
 <style scoped>
 /* 헤더·본문을 배경 도쿄타워보다 위에 */
-.page > header,
+.page > header { position: sticky; top: 0; z-index: 30; }
 .page > main { position: relative; z-index: 1; }
 </style>

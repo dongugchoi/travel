@@ -56,7 +56,7 @@
           <span class="tp-preview">
             <em>{{ hour || '--' }}</em>:<em>{{ minute || '--' }}</em>
           </span>
-          <button type="button" class="tp-done" :disabled="!hour" @click="close">{{ $t('확인') }}</button>
+          <button type="button" class="btn btn-primary btn-sm tp-done" :disabled="!hour" @click="close">{{ $t('확인') }}</button>
         </div>
       </div>
     </transition>
@@ -118,12 +118,14 @@ export default {
   justify-content: space-between;
   padding: 9px 12px;
   border: 1px solid var(--line);
+  border-radius: 10px;
   background: var(--surface);
   cursor: pointer;
   text-align: left;
+  transition: border-color 0.2s, border-radius 0.15s;
 }
 .tp-field:focus { outline: none; border-color: var(--accent); }
-.tp-field.open { border-color: var(--ink); }
+.tp-field.open { border-color: var(--ink); border-radius: 10px 10px 0 0; }
 .tp-field.invalid { border-color: var(--accent); }
 .tp-value { font-size: 20px; font-style: italic; color: var(--accent); letter-spacing: 1px; }
 .tp-ph { color: var(--muted); }
@@ -132,6 +134,7 @@ export default {
 .tp-panel {
   border: 1px solid var(--ink);
   border-top: none;
+  border-radius: 0 0 10px 10px;
   background: var(--surface);
   padding: 14px 14px 12px;
 }
@@ -153,6 +156,7 @@ export default {
 .tp-grid button {
   padding: 7px 0;
   border: 1px solid transparent;
+  border-radius: 8px;
   background: none;
   font-size: 15px;
   font-style: italic;
@@ -177,15 +181,6 @@ export default {
 }
 .tp-preview { font-size: 22px; color: var(--muted); }
 .tp-preview em { color: var(--accent); }
-.tp-done {
-  padding: 6px 18px;
-  border: 1px solid var(--ink);
-  background: var(--ink);
-  color: var(--bg);
-  cursor: pointer;
-}
-.tp-done:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); }
-.tp-done:disabled { opacity: 0.4; cursor: default; }
 
 .tp-slide-enter-active, .tp-slide-leave-active { transition: opacity 0.15s, transform 0.15s; }
 .tp-slide-enter, .tp-slide-leave-to { opacity: 0; transform: translateY(-4px); }

@@ -1,6 +1,6 @@
 <template>
-  <section class="gate">
-    <template v-if="!authChecked || (canEdit && !tripLoaded && sync !== 'error')">
+  <section class="gate" :class="{ loading }">
+    <template v-if="loading">
       <span class="spinner" aria-hidden="true" />
       <p class="muted">{{ $t('불러오는 중…') }}</p>
     </template>
@@ -35,7 +35,10 @@ export default {
     return { error: '' }
   },
   computed: {
-    ...mapState(['authChecked', 'user', 'canEdit', 'tripLoaded', 'sync'])
+    ...mapState(['authChecked', 'user', 'canEdit', 'tripLoaded', 'sync']),
+    loading () {
+      return !this.authChecked || (this.canEdit && !this.tripLoaded && this.sync !== 'error')
+    }
   },
   methods: {
     async signIn () {
@@ -62,6 +65,14 @@ export default {
   justify-content: center;
   gap: 14px;
   text-align: center;
+}
+/* 불러오는 중: 헤더·여백과 상관없이 화면 정가운데 */
+.gate.loading {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  min-height: 0;
+  pointer-events: none;
 }
 h1 { margin: 0; font-size: 30px; font-weight: 600; letter-spacing: 6px; }
 .muted { margin: 0; color: var(--muted); }

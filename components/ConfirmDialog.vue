@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-if="open" class="backdrop" @click.self="$emit('cancel')">
+    <div v-if="open" class="backdrop">
       <div class="box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title" aria-describedby="confirm-body">
         <h2 id="confirm-title">{{ title }}</h2>
         <p id="confirm-body">{{ message }}</p>

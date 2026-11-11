@@ -1,11 +1,8 @@
 <template>
   <section v-if="!dayData" class="missing">
     <p>{{ $t('없는 날짜예요') }}</p>
-    <NuxtLink to="/" class="btn btn-chip back">{{ $t('← 전체 일정') }}</NuxtLink>
   </section>
   <section v-else>
-    <NuxtLink to="/" class="btn btn-chip back">{{ $t('← 전체 일정') }}</NuxtLink>
-
     <header class="day-hero rise">
       <span class="num">{{ dayData.day | pad2 }}</span>
       <div class="hero-text">
@@ -61,10 +58,13 @@
       @add-place="openAdd"
     />
 
-    <nav class="day-nav">
-      <NuxtLink v-if="prevDay" :to="`/days/${prevDay}`" class="btn btn-glass">← {{ $t('{day}일차', { day: prevDay }) }}</NuxtLink>
-      <span v-else />
-      <NuxtLink v-if="nextDay" :to="`/days/${nextDay}`" class="btn btn-glass">{{ $t('{day}일차', { day: nextDay }) }} →</NuxtLink>
+    <!-- 이전·다음 날짜: 화면 아래에 고정 (본문만 스크롤) -->
+    <nav v-if="prevDay || nextDay" class="day-nav">
+      <div class="day-nav-inner">
+        <NuxtLink v-if="prevDay" :to="`/days/${prevDay}`" class="btn btn-plain">← {{ $t('{day}일차', { day: prevDay }) }}</NuxtLink>
+        <span v-else />
+        <NuxtLink v-if="nextDay" :to="`/days/${nextDay}`" class="btn btn-plain">{{ $t('{day}일차', { day: nextDay }) }} →</NuxtLink>
+      </div>
     </nav>
 
     <ScheduleDialog
@@ -280,7 +280,6 @@ export default {
 </script>
 
 <style scoped>
-.back { margin-bottom: 4px; }
 .eyebrow-row { display: flex; align-items: center; gap: 10px; }
 .edit-day { padding: 2px 10px; font-size: 12px; }
 .missing { padding: 60px 0; text-align: center; color: var(--muted); }
@@ -309,10 +308,28 @@ h1 { margin: 6px 0 4px; font-size: 30px; font-weight: 600; }
 .schedule-list { list-style: none; padding: 0; margin: 0 0 32px; }
 
 .day-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  /* 유리처럼 비치는 하단 바 */
+  background: rgba(17, 26, 38, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.day-nav-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 6px 16px;
   display: flex;
   justify-content: space-between;
-  margin-top: 40px;
+  align-items: center;
 }
+/* 하단 바에 마지막 내용이 가려지지 않게 */
+section:not(.missing) { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
 
 @media (max-width: 480px) {
   .day-hero { gap: 16px; }

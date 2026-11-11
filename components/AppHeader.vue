@@ -1,10 +1,24 @@
 <template>
   <header class="app-header">
-    <div class="inner">
+    <div class="inner" :class="{ sub: !isHome }">
       <!-- 저장 상태는 글자 대신 제목 색으로: 저장 중 회색 → 저장됨 초록 / 실패 빨강 -->
-      <NuxtLink to="/" class="logo" :class="logoState" :title="label ? $t(label) : null">{{ $t('여행') }}</NuxtLink>
+      <!-- 첫 화면: "여행" / 날짜 화면 등: 뒤로가기 -->
+      <NuxtLink v-if="isHome" to="/" class="logo" :class="logoState" :title="label ? $t(label) : null">{{ $t('여행') }}</NuxtLink>
+      <template v-else>
+        <button type="button" class="back" :aria-label="$t('뒤로가기')" @click="goBack">
+          <span class="back-arrow" aria-hidden="true">←</span>{{ $t('전체 일정') }}
+        </button>
+        <!-- 날짜 화면에서는 "여행" 이 가운데 -->
+        <NuxtLink to="/" class="logo center" :class="logoState" :title="label ? $t(label) : null">{{ $t('여행') }}</NuxtLink>
+      </template>
 
       <div class="right">
+        <!-- 로그인한 구글 계정 사진: 한국어 버튼 왼쪽 -->
+        <template v-if="authReady && user && !hideAccount">
+          <img v-if="user.photo" :src="user.photo" alt="" class="avatar" referrerpolicy="no-referrer">
+          <span v-if="!canEdit" class="viewer" :title="$t('이 계정은 일정을 고칠 수 없어요')">{{ $t('보기 전용') }}</span>
+        </template>
+
         <!-- 언어 버튼 하나: 지금 언어가 보이고, 누르면 다른 언어로 바뀜 -->
         <button
           type="button"
@@ -16,14 +30,10 @@
           {{ currentLang.label }}
         </button>
 
-        <!-- 로그인은 브라우저에서만 동작 (mounted 뒤에 authReady 가 켜짐) -->
-        <template v-if="authReady">
+        <!-- 로그인은 브라우저에서만 동작 (mounted 뒤에 authReady 가 켜짐). 날짜 화면·창에서는 숨김 -->
+        <template v-if="authReady && !hideAccount">
           <button v-if="!user" type="button" class="btn btn-chip auth-btn" @click="signIn">{{ $t('로그인') }}</button>
-          <div v-else class="user">
-            <img v-if="user.photo" :src="user.photo" alt="" class="avatar" referrerpolicy="no-referrer">
-            <span v-if="!canEdit" class="viewer" :title="$t('이 계정은 일정을 고칠 수 없어요')">{{ $t('보기 전용') }}</span>
-            <button type="button" class="btn btn-chip auth-btn" @click="signOut">{{ $t('로그아웃') }}</button>
-          </div>
+          <button v-else type="button" class="btn btn-chip auth-btn" @click="signOut">{{ $t('로그아웃') }}</button>
         </template>
       </div>
     </div>
@@ -59,6 +69,13 @@ export default {
     otherLang () {
       return this.langs.find(l => l.value !== this.$lang) || this.langs[0]
     },
+    // 날짜 화면(자유 일정 등)에 들어갔거나 창이 열려 있으면 프로필·로그아웃을 숨김
+    hideAccount () {
+      return !this.isHome || !!this.$route.query.dialog
+    },
+    isHome () {
+      return this.$route.path === '/'
+    },
     logoState () {
       return this.label ? 'is-' + this.sync : ''
     },
@@ -70,6 +87,12 @@ export default {
   },
   methods: {
     setLang,
+    // 사이트 안에서 왔으면 진짜 뒤로가기(아이폰 스와이프와 같게), 바로 들어왔으면 전체 일정으로
+    goBack () {
+      const from = this.$nuxt && this.$nuxt.context && this.$nuxt.context.from
+      if (from && from.path !== this.$route.path) this.$router.back()
+      else this.$router.push('/')
+    },
     async signIn () {
       this.authError = ''
       try {
@@ -104,6 +127,31 @@ export default {
   gap: 12px;
 }
 .logo { font-size: 17px; font-weight: 600; letter-spacing: 3px; transition: color 0.4s; }
+/* 날짜 화면: [← 전체 일정] [여행(가운데)] [오른쪽 버튼들]
+   양옆 칸을 같은 너비로 두어 "여행" 이 화면 가운데 오게 (휴대폰처럼 좁으면 자연스럽게 밀림) */
+.inner.sub { display: grid; grid-template-columns: 1fr auto 1fr; }
+.inner.sub .right { justify-self: end; }
+.logo.center { justify-self: center; }
+/* 휴대폰 날짜 화면: 자리가 좁아 "여행" 이 밀리지 않게 프로필 사진만 숨김 */
+@media (max-width: 480px) {
+  .inner.sub .avatar { display: none; }
+}
+.back {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: none;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.back:hover { color: #fff; }
+.back-arrow { font-size: 16px; line-height: 1; }
 .logo.is-loading,
 .logo.is-saving { color: var(--muted); }
 .logo.is-saved { color: var(--sage); }

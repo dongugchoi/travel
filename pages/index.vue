@@ -3,7 +3,8 @@
     <div class="summary-row rise">
       <div class="headline">
         <!-- 여행 제목: 붓글씨 -->
-        <h1 v-if="trip.title" class="brush-title">{{ $tx(trip.title) }}</h1>
+        <!-- "여행" 없이 도시 이름만 (destination: "도쿄 · 요코하마") -->
+        <h1 v-if="headTitle" class="brush-title">{{ $tx(headTitle) }}</h1>
       </div>
       <button v-if="canEdit" type="button" class="btn btn-glass btn-sm add-day" @click="addDay">{{ $t('+ 날짜 추가') }}</button>
     </div>
@@ -50,6 +51,11 @@ export default {
   computed: {
     ...mapState(['trip', 'canEdit']),
     ...mapGetters(['days']),
+    // 맨 위 붓글씨 제목: 목적지(도시 이름)만. 없으면 여행 제목에서 '여행'을 뺀 것
+    headTitle () {
+      const t = this.trip.destination || (this.trip.title || '').replace(/\s*여행\s*$/, '')
+      return (t || '').trim()
+    },
     target () {
       return this.pendingDay !== null ? this.days.find(d => d.day === this.pendingDay) : null
     },

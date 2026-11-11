@@ -23,7 +23,21 @@
         </div>
       </li>
     </ol>
-    <p v-else class="empty">{{ $t('장소가 있는 일정이 2개 이상이면 구간별 이동 경로가 나와요.') }}</p>
+    <!-- 장소가 하나뿐이면: 지금 내 위치에서 그곳까지 -->
+    <ol v-else-if="places.length" class="legs">
+      <li v-for="(s, i) in places" :key="i">
+        <span class="leg-num">{{ i + 1 }}</span>
+        <div class="leg-text">
+          <span>{{ $t('현재 위치') }} <span class="arrow">→</span> {{ $tx(s.place || s.address) }}</span>
+          <small>{{ s.time }} · {{ $t('지금 있는 곳에서 출발') }}</small>
+        </div>
+        <div class="leg-actions">
+          <button type="button" class="btn btn-chip leg-btn" @click="openFromHere(s, 'transit')">{{ $t('대중교통') }}</button>
+          <button type="button" class="btn btn-chip leg-btn" @click="openFromHere(s, 'walking')">{{ $t('도보') }}</button>
+        </div>
+      </li>
+    </ol>
+    <p v-else class="empty">{{ $t('장소가 있는 일정을 추가하면 이동 경로가 나와요.') }}</p>
 
     <div v-if="legs.length" class="foot">
       <button type="button" class="btn btn-primary map-btn" @click="openMap(0, 'walking')">{{ $t('지도 보기') }}</button>
@@ -76,6 +90,10 @@ export default {
     legs () {
       return buildLegs(this.schedules, this.region)
     },
+    // 장소가 있는 일정 (구간이 없을 때 "현재 위치 → 여기" 로 보여줌)
+    places () {
+      return this.schedules.filter(s => (s.place || s.address || '').trim())
+    },
     // 일정·모드가 바뀌면 다시 계산 (이미 계산한 구간은 캐시 사용)
     trigger () {
       return [this.sync === 'loading', this.canEdit, this.mode, this.legs.map(l => routeKey('x', l.from, l.to, this.region)).join()].join('|')
@@ -104,8 +122,8 @@ export default {
       this.openRouteDialog('map')
     },
     // ScheduleItem 의 "여기까지 길찾기" 에서 부름
-    openFromHere (schedule) {
-      this.dialog = { leg: 0, mode: 'walking', target: schedule, all: false }
+    openFromHere (schedule, mode = 'walking') {
+      this.dialog = { leg: 0, mode, target: schedule, all: false }
       this.openRouteDialog('map')
     },
     // 하루 전체 동선을 내 지도 창에서

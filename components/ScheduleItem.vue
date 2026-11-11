@@ -178,5 +178,6 @@ export default {
 .reply-btn { flex-shrink: 0; }
 
 .links { display: flex; gap: 8px; margin-top: 10px; }
-.item-actions { align-self: flex-start; margin-top: 4px; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+/* 수정 · 삭제 를 오른쪽에 나란히 (가로) */
+.item-actions { align-self: flex-start; margin-top: 4px; display: flex; flex-direction: row; align-items: center; gap: 12px; flex-shrink: 0; }
 </style>

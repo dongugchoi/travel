@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-if="open" class="backdrop" @click.self="close">
+    <div v-if="open" class="backdrop">
       <div
         class="dialog"
         role="dialog"
@@ -242,6 +242,7 @@ export default {
   width: 100%;
   max-width: 440px;
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   background: var(--bg);
   border: 1px solid var(--line);
@@ -276,6 +277,9 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .place-field { position: relative; }
 .suggestions {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
   position: absolute;
   top: 62px;
   left: 0;

@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-if="open" class="backdrop" @click.self="close">
+    <div v-if="open" class="backdrop">
       <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="map-dialog-title">
         <header class="head">
           <div class="title-wrap">
@@ -743,6 +743,7 @@ export default {
   width: 100%;
   max-width: 720px;
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   display: flex;
   flex-direction: column;
   background: var(--bg);
@@ -861,10 +862,19 @@ export default {
 .fade-leave-active { transition: opacity 0.15s; }
 .fade-enter, .fade-leave-to { opacity: 0; }
 
+/* 휴대폰: 아래에서 올라오는 시트. 아이폰 사파리는 100vh 가 주소창을 빼지 않아 위가 잘리므로
+   실제로 보이는 높이(dvh)를 쓰고, 위쪽은 살짝 비워 둠 */
 @media (max-width: 600px) {
   .backdrop { padding: 0; align-items: flex-end; }
-  .sheet { max-height: 100vh; height: 100vh; border: none; }
-  .map-wrap { flex: 1; height: auto; }
+  .sheet {
+    height: 90vh;
+    height: 90dvh;
+    max-height: 90vh;
+    max-height: 90dvh;
+    border: none;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .map-wrap { flex: 1; height: auto; min-height: 0; }
   .picked { flex-direction: column; align-items: stretch; }
 }
 </style>

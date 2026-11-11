@@ -2,7 +2,7 @@
   <!-- 배경 사진: 도쿄타워 야경 (Unsplash 무료 이미지). 위에 남색을 덮어 글씨가 잘 보이게 -->
   <div class="backdrop" aria-hidden="true" :style="{ backgroundImage: `url(${src})` }">
     <!-- 타워 불빛 숨쉬기: 같은 사진을 '밝은 부분만 더 밝게'(screen) 겹쳐 천천히 켰다 껐다 -->
-    <div class="glow" :style="{ backgroundImage: `url(${src})` }" />
+    <div class="glow" :style="{ backgroundImage: `url(${glowSrc})` }" />
     <!-- 별똥별: 왼쪽 위에서 오른쪽 아래로, 빛나는 머리가 앞장서고 꼬리는 뒤(위)로 -->
     <div class="sky">
       <span v-for="(m, i) in meteors" :key="i" class="meteor" :style="m" />
@@ -23,6 +23,10 @@ export default {
     // GitHub Pages 에선 /travel/ 아래에 있으므로 router base 를 붙임
     src () {
       return `${this.$router.options.base || '/'}tower.jpg`
+    },
+    // 불빛만 남긴 투명 PNG (미리 만들어 둠 → 아이폰에서도 똑같이 보임)
+    glowSrc () {
+      return `${this.$router.options.base || '/'}tower-glow.png`
     }
   },
   mounted () {
@@ -66,9 +70,8 @@ export default {
   background-size: cover;
   background-position: 72% center;
   background-repeat: no-repeat;
-  mix-blend-mode: screen; /* 검은 부분은 그대로, 밝은 부분만 더해짐 */
-  /* 흑백으로 바꿔 밝은 곳만 남기고(하늘은 새까맣게), 그 불빛을 주황·금빛으로 물들여 살짝 번지게 */
-  filter: grayscale(1) contrast(5) brightness(0.85) sepia(1) saturate(6) hue-rotate(-12deg) blur(2px);
+  /* 필터·혼합 없이 투명 PNG 를 켰다 껐다만 함 (아이폰 사파리에서도 색이 같게) */
+  will-change: opacity;
   opacity: 0.05;
   animation: breathe 5s ease-in-out infinite;
 }
