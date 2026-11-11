@@ -14,6 +14,7 @@ export const i18n = Vue.observable({ lang: 'ko' })
 
 const JA = {
   // 헤더 · 로그인
+  '여행': '旅行',
   '로그인': 'ログイン',
   '로그아웃': 'ログアウト',
   '보기 전용': '閲覧のみ',

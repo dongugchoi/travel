@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="inner">
       <!-- 저장 상태는 글자 대신 제목 색으로: 저장 중 회색 → 저장됨 초록 / 실패 빨강 -->
-      <NuxtLink to="/" class="logo" :class="logoState" :title="label ? $t(label) : null">Travel Journal</NuxtLink>
+      <NuxtLink to="/" class="logo" :class="logoState" :title="label ? $t(label) : null">{{ $t('여행') }}</NuxtLink>
 
       <div class="right">
         <!-- 언어 버튼 하나: 지금 언어가 보이고, 누르면 다른 언어로 바뀜 -->
@@ -97,7 +97,7 @@ export default {
   justify-content: space-between;
   gap: 12px;
 }
-.logo { font-size: 17px; font-style: italic; transition: color 0.4s; }
+.logo { font-size: 17px; font-weight: 600; letter-spacing: 3px; transition: color 0.4s; }
 .logo.is-loading,
 .logo.is-saving { color: var(--muted); }
 .logo.is-saved { color: var(--sage); }
